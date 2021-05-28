@@ -117,7 +117,7 @@ Description (from WHO): this could be Prevalence of thinness among children and 
 Description: this could be a subset of the category above
 
 ## Income composition of resources	
-Not sure what this is
+The Human Development Index is a statistic composite index of life expectancy, education, and per capita income indicators, which are used to rank countries into four tiers of human development.
 
 ## Schooling
 Not sure what this is (average number of years of school attended?) but may not be consistent with min and max
