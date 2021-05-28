@@ -7,5 +7,121 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Libraries to load
+library(ggplot2)
+library(tidyverse)
+library(GGally)
+
+# Set current working directory as git repository local folder
+setwd(".")
+
+# Retrieve current dataset
+life_expectancies = read.csv("Life Expectancy Data.csv", header = TRUE)
 ```
 
+```{r}
+life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy',
+                                               'AdultMortality'='Adult.Mortality',
+                                               'InfantDeaths'='infant.deaths',
+                                               'PercentageExpenditure'='percentage.expenditure',
+                                               'Hepatitis_B'='Hepatitis.B',
+                                               'UnderFiveDeaths'='under.five.deaths',
+                                               'TotalExpenditure'='Total.expenditure',
+                                               'HIV_AIDS'='HIV.AIDS',
+                                               'thinness_1_19_years' = 'thinness..1.19.years',
+                                               'thinness_5_9_years' = 'thinness.5.9.years',
+                                               'IncomeCompositionOfResources' = 'Income.composition.of.resources')
+
+summary(life_expectancy)
+                                                                                            
+```
+
+# Comments on each column
+Description taken from one of the following:
+- https://www.kaggle.com/kumarajarshi/life-expectancy-who: Data Explorer -> Column
+- https://www.who.int/data/gho/data/indicators/indicators-index (and will be marked from )
+
+## Country
+We may need to concentrate only on some countries, TBD
+
+## Year
+I wasn't sure if we needed to consider all the years (it would have been easier to consider only one year, for example 2014 since it's the 2nd most recent in the dataset but it has less data missing compared to 2014). But given the question for the project "Build a model with the main goal to identify key relationships and that is highly interpretable.", it's likely that year would be a good predictor (life expectancy tend to increase over time) so we need to keep it.
+
+## Status
+There are many problems in this column:
+- Since the following countries were marked as Developed: Hungary, Italy, Latvia, Lithuania, Poland, Spain, Portugal
+- The following countries should also be marked as Developed: Canada, Finland, France, Greece, Israel, Monaco, Republic of Korea
+
+## Life expectancy
+Description (from WHO): This seems to be "Life expectancy at birth (years)" (the other option "Life expectancy at age 60 (years)" is not consistent with the data)
+
+## Adult Mortality
+Description: Adult Mortality Rates of both sexes (probability of dying between 15 and 60 years per 1000 population)
+
+## infant deaths
+Description: Number of Infant Deaths per 1000 population
+The maximum of 1800.0 seems to be inaccurate
+
+## Alcohol
+Description: Alcohol, recorded per capita (15+) consumption (in litres of pure alcohol)
+200 N/A (out of almost 3,000 observations)
+
+## percentage expenditure
+Description: Expenditure on health as a percentage of Gross Domestic Product per capita(%)
+A lot of problem in this column, for example:
+- Min.: 0.000  
+- Max.: 19479.912
+
+## Hepatitis B
+Description: Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
+500 N/A (out of almost 3,000 observations)
+
+## Measles
+Measles - number of reported cases per 1000 population
+A lot of problem in this column, for example:
+- Max.: 212183.0
+
+## BMI
+A lot of problem in this column, for example:
+- Min.: 1.00
+- Max.: 87.30
+
+## under-five deaths
+Not sure if it's a rate for 1000 population, WHO site not clear.
+
+## Polio	
+Description (from WHO): It's probably referring to "immunization coverage among one-year-olds (%)"
+
+## Total expenditure
+Description (from WHO): Total expenditure on health as a percentage of gross domestic product
+200 N/A (out of almost 3,000 observations)
+
+## Diphtheria
+Description (from WHO): Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-olds (%)
+
+## HIV/AIDS
+Description: there are 23 indicators related to HIV on the WHO web site, I'm not sure which one it is
+
+## GDP
+400 N/A (out of almost 3,000 observations)
+
+## Population
+700 N/A (out of almost 3,000 observations)
+Min is probably wrong (population of 34?)
+
+## thinness  1-19 years
+Description (from WHO): this could be Prevalence of thinness among children and adolescents, BMI < -2 standard deviations below the median (crude estimate) (%)
+
+## thinness 5-9 years
+Description: this could be a subset of the category above
+
+## Income composition of resources	
+Not sure what this is
+
+## Schooling
+Not sure what this is (average number of years of school attended?) but may not be consistent with min and max
+
+```{r}
+# Investigating some correlations
+ggpairs(data = life_expectancy, mapping = aes(color = Status), columns = c("LifeExpectancy", "AdultMortality", "Alcohol", "PercentageExpenditure"), title = "Correlation of variables")
