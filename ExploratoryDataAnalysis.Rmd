@@ -52,6 +52,7 @@ I wasn't sure if we needed to consider all the years (it would have been easier 
 There are many problems in this column:
 - Since the following countries were marked as Developed: Hungary, Italy, Latvia, Lithuania, Poland, Spain, Portugal
 - The following countries should also be marked as Developed: Canada, Finland, France, Greece, Israel, Monaco, Republic of Korea
+- UPDATED COMMENT
 
 ## Life expectancy
 Description (from WHO): This seems to be "Life expectancy at birth (years)" (the other option "Life expectancy at age 60 (years)" is not consistent with the data)
