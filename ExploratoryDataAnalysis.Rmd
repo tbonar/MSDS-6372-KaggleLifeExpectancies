@@ -17,7 +17,7 @@ library(GGally)
 setwd(".")
 
 # Retrieve current dataset
-life_expectancies = read.csv("Life Expectancy Data.csv", header = TRUE)
+life_expectancy = read.csv("Life Expectancy Data.csv", header = TRUE)
 ```
 
 ```{r}
@@ -122,7 +122,3 @@ The Human Development Index is a statistic composite index of life expectancy, e
 
 ## Schooling
 Not sure what this is (average number of years of school attended?) but may not be consistent with min and max
-
-```{r}
-# Investigating some correlations
-ggpairs(data = life_expectancy, mapping = aes(color = Status), columns = c("LifeExpectancy", "AdultMortality", "Alcohol", "PercentageExpenditure"), title = "Correlation of variables")
