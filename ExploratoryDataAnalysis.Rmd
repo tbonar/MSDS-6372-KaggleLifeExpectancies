@@ -25,16 +25,15 @@ life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy
                                                'AdultMortality'='Adult.Mortality',
                                                'InfantDeaths'='infant.deaths',
                                                'PercentageExpenditure'='percentage.expenditure',
-                                               'Hepatitis_B'='Hepatitis.B',
+                                               'HepatitisB'='Hepatitis.B',
                                                'UnderFiveDeaths'='under.five.deaths',
                                                'TotalExpenditure'='Total.expenditure',
                                                'HIV_AIDS'='HIV.AIDS',
-                                               'thinness_1_19_years' = 'thinness..1.19.years',
-                                               'thinness_5_9_years' = 'thinness.5.9.years',
+                                               'Thinness_1_19_years' = 'thinness..1.19.years',
+                                               'Thinness_5_9_years' = 'thinness.5.9.years',
                                                'IncomeCompositionOfResources' = 'Income.composition.of.resources')
 
 summary(life_expectancy)
-                                                                                            
 ```
 
 # Comments on each column
@@ -49,10 +48,19 @@ We may need to concentrate only on some countries, TBD
 I wasn't sure if we needed to consider all the years (it would have been easier to consider only one year, for example 2014 since it's the 2nd most recent in the dataset but it has less data missing compared to 2014). But given the question for the project "Build a model with the main goal to identify key relationships and that is highly interpretable.", it's likely that year would be a good predictor (life expectancy tend to increase over time) so we need to keep it.
 
 ## Status
-There are many problems in this column:
-- Since the following countries were marked as Developed: Hungary, Italy, Latvia, Lithuania, Poland, Spain, Portugal
-- The following countries should also be marked as Developed: Canada, Finland, France, Greece, Israel, Monaco, Republic of Korea
-- UPDATED COMMENT
+Some of the data in this column has been changed:
+- It's not clear what is the cutline between a Developed and a Developing country
+- In the original data, the following countries were marked as Developed: Hungary, Italy, Latvia, Lithuania, Poland, Spain, Portugal
+- Based on this and the GDP per capita (from https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.PP.CD?downloadformat=csv, using data from 2015), the Status for the following countries will be changed from Developing to Developed: Bahamas, Bahrain, Canada, Finland, France, Greece, Israel, Monaco, Qatar, Republic of Korea, San Marino, Saudi Arabia, United Arab Emirates
+
+```{r}
+print(paste0("Before change: number of rows with Developed: ", sum(life_expectancy$Status == "Developed")))
+print(paste0("Before change: number of rows with Developing: ", sum(life_expectancy$Status == "Developing")))
+life_expectancy$Status <- ifelse(life_expectancy$Country %in% c('Bahamas', 'Bahrain', 'Canada', 'Finland', 'France', 'Greece', 'Israel', 'Monaco', 'Qatar', 'Republic of Korea', 'San Marino', 'Saudi Arabia', 'United Arab Emirates'), "Developed", life_expectancy$Status)
+print(paste0("After change: number of rows with Developed: ", sum(life_expectancy$Status == "Developed")))
+print(paste0("After change: number of rows with Developing: ", sum(life_expectancy$Status == "Developing")))
+```
+After the change, the number of rows with Developed increased by 690-512=178 (with a corresponding decrease for the rows with Developing), which makes sense because the Status was updated for 13 countries and we have 16 rows for most countries (for years 2000 to 2015) but we only have 1 row for Monaco and San Marino (both for year 2013): 11*16 + 2*1 = 178
 
 ## Life expectancy
 Description (from WHO): This seems to be "Life expectancy at birth (years)" (the other option "Life expectancy at age 60 (years)" is not consistent with the data)
