@@ -8,6 +8,24 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+# Function to investigate missing values in a column
+investigate_missing_column_values <- function(column_name) {
+  missing_indices <- which(is.na(life_expectancy[,column_name]))
+  print(length(missing_indices))
+
+  # Are any specific year a key indicator of missing value?
+  print(life_expectancy[missing_indices,] %>% 
+    group_by(Year) %>%
+    summarise(missing = length(Year)))
+
+  # What about country?
+  print(life_expectancy[missing_indices,] %>% 
+  group_by(Country) %>%
+  summarise(missing = length(Country)))
+
+}
+
+
 # Libraries to load
 library(plyr)
 library(dplyr)
@@ -43,7 +61,7 @@ Description taken from one of the following:
 - https://www.kaggle.com/kumarajarshi/life-expectancy-who: Data Explorer -> Column
 - https://www.who.int/data/gho/data/indicators/indicators-index (and will be marked from )
 
-## Country
+## Country - need to discuss if we should even consider it as a candidate for the model or not?
 ```{r Country as Factor}
 # Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
 life_expectancy %>% 
@@ -59,7 +77,7 @@ life_expectancy[,'Country'] <- factor(life_expectancy[,'Country'])
 unique(life_expectancy[,"Country"])
 ```
 
-## Year
+## Year - need to discuss if we should restrict to 2000 to 2014 (instead of 2015) because of missing data in 2015
 ```{r Year as Factor}
 # Transform Years into factor
 life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
@@ -94,8 +112,13 @@ Description: Number of Infant Deaths per 1000 population
 The maximum of 1800.0 seems to be inaccurate
 
 ## Alcohol
-Description: Alcohol, recorded per capita (15+) consumption (in litres of pure alcohol)
-200 N/A (out of almost 3,000 observations)
+Description: Alcohol, recorded per capita (15+) consumption (in liters of pure alcohol)
+The data seems to make sense (reasonable min and max, low consumption in mainly Muslim countries, for example)
+200 N/A (out of almost 3,000 observations) - most of the missing data is from the most recent year (2015). One country, South Sudan, doesn't have any data for all the years
+
+```{r}
+investigate_missing_column_values("Alcohol")
+```
 
 ## percentage expenditure
 Description: Expenditure on health as a percentage of Gross Domestic Product per capita(%)
@@ -117,6 +140,12 @@ A lot of problem in this column, for example:
 - Min.: 1.00
 - Max.: 87.30
 
+Only small number of missing values so main issue is accuracy of the data
+
+```{r}
+investigate_missing_column_values("BMI")
+```
+
 ## under-five deaths
 Not sure if it's a rate for 1000 population, WHO site not clear.
 
@@ -129,6 +158,12 @@ Description (from WHO): Total expenditure on health as a percentage of gross dom
 
 ## Diphtheria
 Description (from WHO): Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-olds (%)
+
+Only small number of missing value, need to investigate more accuracy of the data
+
+```{r}
+investigate_missing_column_values("Diphtheria")
+```
 
 ## HIV/AIDS
 Description: there are 23 indicators related to HIV on the WHO web site, I'm not sure which one it is
@@ -201,4 +236,10 @@ UNDP_HDI_Bulk_Dataset <- UNDP_HDI_Bulk_Dataset %>% select(-("2016":"2019") & -("
 ```
 
 ## Schooling
-Not sure what this is (average number of years of school attended?) but may not be consistent with min and max
+Definition: Average number of completed years of education of a country's population aged 25 years and older, excluding years spent repeating individual grades.
+
+10 countries are missing all the values, we may have to fill some of them manually
+
+```{r}
+investigate_missing_column_values("Schooling")
+```
