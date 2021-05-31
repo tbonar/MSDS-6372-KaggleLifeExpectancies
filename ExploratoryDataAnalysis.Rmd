@@ -35,14 +35,6 @@ life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy
                                                'IncomeCompositionOfResources' = 'Income.composition.of.resources')
 
 summary(life_expectancy)
-
-# Transform Years into factor
-life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
-
-# Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
-count(life_expectancy, vars='Country')
-# Transform into factor for easier analysis
-life_expectancy[,'Country'] <- factor(life_expectancy[,'Country'])
 ```
 
 # Comments on each column
@@ -51,10 +43,18 @@ Description taken from one of the following:
 - https://www.who.int/data/gho/data/indicators/indicators-index (and will be marked from )
 
 ## Country
-We may need to concentrate only on some countries, TBD
+```{r Country as Factor}
+# Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
+count(life_expectancy, vars='Country')
+# Transform into factor for easier analysis
+life_expectancy[,'Country'] <- factor(life_expectancy[,'Country'])
+```
 
 ## Year
-I wasn't sure if we needed to consider all the years (it would have been easier to consider only one year, for example 2014 since it's the 2nd most recent in the dataset but it has less data missing compared to 2014). But given the question for the project "Build a model with the main goal to identify key relationships and that is highly interpretable.", it's likely that year would be a good predictor (life expectancy tend to increase over time) so we need to keep it.
+```{r Year as Factor}
+# Transform Years into factor
+life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
+```
 
 ## Status
 Some of the data in this column has been changed:
@@ -124,7 +124,11 @@ Description (from WHO): Diphtheria tetanus toxoid and pertussis (DTP3) immunizat
 Description: there are 23 indicators related to HIV on the WHO web site, I'm not sure which one it is
 
 ## GDP
+Countries' corresponding economic data was collected from United Nation website
 400 N/A (out of almost 3,000 observations)
+```{r GDP Data Cleanup}
+
+```
 
 ## Population
 700 N/A (out of almost 3,000 observations)
