@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Libraries to load
 library(plyr)
+library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(GGally)
@@ -18,7 +19,7 @@ library(GGally)
 setwd(".")
 
 # Retrieve current dataset
-life_expectancy = read.csv("Life Expectancy Data.csv", header = TRUE)
+life_expectancy = read.csv("Life Expectancy Data.csv", header = TRUE, fileEncoding = "UTF-8")
 ```
 
 ```{r}
@@ -45,15 +46,24 @@ Description taken from one of the following:
 ## Country
 ```{r Country as Factor}
 # Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
-count(life_expectancy, vars='Country')
+life_expectancy %>% 
+  group_by(Country) %>%
+  summarise(count = length(Country))
+# Check for any countries that do not have 16 rows/year of data (hint hint Tuvalu, and some others)
+
+# What year do they have?
+
+
 # Transform into factor for easier analysis
 life_expectancy[,'Country'] <- factor(life_expectancy[,'Country'])
+unique(life_expectancy[,"Country"])
 ```
 
 ## Year
 ```{r Year as Factor}
 # Transform Years into factor
 life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
+unique(life_expectancy[,"Year"])
 ```
 
 ## Status
@@ -125,21 +135,22 @@ Description: there are 23 indicators related to HIV on the WHO web site, I'm not
 
 ## GDP
 Countries' corresponding economic data was collected from United Nation website
-400 N/A (out of almost 3,000 observations)
+448 N/A (out of almost 3,000 observations)
 ```{r GDP Data Cleanup}
 # What rows are missing GDP?
 missing_GDP_indices <- which(is.na(life_expectancy[,'GDP']))
-count(duplicated(life_expectancy[missing_GDP_indices, 'Year']))
+length(missing_GDP_indices)
 
 # Are any specific year a key indicator of missing value?
-count(life_expectancy[missing_GDP_indices,], 'Year')
+life_expectancy[missing_GDP_indices,] %>% 
+  group_by(Year) %>%
+  summarise(missing_GDP = length(Year))
 # 2000-2015 are missing are about even for missing data except 2013 has more
 
 # What about country?
-count(life_expectancy[missing_GDP_indices,], 'Country')
-
-# Year and Country Missing Entries
-count(life_expectancy[missing_GDP_indices,], c('Country','Year'))
+life_expectancy[missing_GDP_indices,] %>% 
+  group_by(Country) %>%
+  summarise(missing_GDP = length(Country))
 
 # Fill missing GDP data from secondary source
 
@@ -156,7 +167,38 @@ Description (from WHO): this could be Prevalence of thinness among children and 
 Description: this could be a subset of the category above
 
 ## Income composition of resources	
-The Human Development Index is a statistic composite index of life expectancy, education, and per capita income indicators, which are used to rank countries into four tiers of human development.
+United Nations Development Programme's [Human Development Index](http://hdr.undp.org/en/content/human-development-index-hdi) in terms of income composition of resources (index ranging from 0 to 1)
+> The Human Development Index is a statistic composite index of life expectancy, education, and per capita income indicators, which are used to rank countries into four tiers of human development.
+> `r tufte::quote_footer('--- Wikipedia')`
+
+```{r}
+# What rows are missing HDI?
+missing_HDI_indices <- which(is.na(life_expectancy[,'IncomeCompositionOfResources']))
+length(missing_HDI_indices)
+
+# Are any specific year a key indicator of missing value?
+life_expectancy[missing_HDI_indices,] %>% 
+  group_by(Year) %>%
+  summarise(missing_HDI = length(Year))
+# 2000-2015 are missing are about even for missing data except 2013 has more
+
+# What about country?
+life_expectancy[missing_HDI_indices,] %>% 
+  group_by(Country) %>%
+  summarise(missing_HDI= length(Country))
+
+# Year and Country Missing Entries
+life_expectancy[missing_HDI_indices,c('Country','Year')]
+
+# Import Modified CSV from UNDP as API is no longer active ()
+## Original and modified are located in data, modified removes excess rows and .. values
+UNDP_HDI_Bulk_Dataset <- read.csv("data/Modified_UNDP_HDI.csv",
+                                  header=T,
+                                  stringsAsFactors = T)
+colnames(UNDP_HDI_Bulk_Dataset) <- sub("X", "", colnames(UNDP_HDI_Bulk_Dataset))
+UNDP_HDI_Bulk_Dataset <- UNDP_HDI_Bulk_Dataset %>% select(-("2016":"2019") & -("1990":"1999"))
+
+```
 
 ## Schooling
 Not sure what this is (average number of years of school attended?) but may not be consistent with min and max
