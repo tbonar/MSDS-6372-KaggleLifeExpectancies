@@ -127,6 +127,21 @@ Description: there are 23 indicators related to HIV on the WHO web site, I'm not
 Countries' corresponding economic data was collected from United Nation website
 400 N/A (out of almost 3,000 observations)
 ```{r GDP Data Cleanup}
+# What rows are missing GDP?
+missing_GDP_indices <- which(is.na(life_expectancy[,'GDP']))
+count(duplicated(life_expectancy[missing_GDP_indices, 'Year']))
+
+# Are any specific year a key indicator of missing value?
+count(life_expectancy[missing_GDP_indices,], 'Year')
+# 2000-2015 are missing are about even for missing data except 2013 has more
+
+# What about country?
+count(life_expectancy[missing_GDP_indices,], 'Country')
+
+# Year and Country Missing Entries
+count(life_expectancy[missing_GDP_indices,], c('Country','Year'))
+
+# Fill missing GDP data from secondary source
 
 ```
 
