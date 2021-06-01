@@ -25,6 +25,23 @@ investigate_missing_column_values <- function(column_name) {
 
 }
 
+# Function to investigate over 1,000 values (for infant deaths and under 5 deaths)
+investigate_over1000 <- function(column_name) {
+  indices1000 <- which(life_expectancy[,column_name]>1000)
+  print(length(indices1000))
+
+  # Are any specific year a key indicator of missing value?
+  print(life_expectancy[indices1000,] %>% 
+    group_by(Year) %>%
+    summarise(missing = length(Year)))
+
+  # What about country?
+  print(life_expectancy[indices1000,] %>% 
+  group_by(Country) %>%
+  summarise(missing = length(Country)))
+
+}
+
 
 # Libraries to load
 library(plyr)
@@ -103,13 +120,28 @@ After the change, the number of rows with Developed increased by 690-512=178 (wi
 
 ## Life expectancy
 Description (from WHO): This seems to be "Life expectancy at birth (years)" (the other option "Life expectancy at age 60 (years)" is not consistent with the data)
+```{r}
+investigate_missing_column_values("LifeExpectancy")
+```
+
 
 ## Adult Mortality
 Description: Adult Mortality Rates of both sexes (probability of dying between 15 and 60 years per 1000 population)
+```{r}
+investigate_missing_column_values("AdultMortality")
+```
+
 
 ## infant deaths
 Description: Number of Infant Deaths per 1000 population
 The maximum of 1800.0 seems to be inaccurate
+```{r}
+summary(life_expectancy$InfantDeaths)
+life_expectancy %>% ggplot(aes(x=life_expectancy$InfantDeaths))+geom_histogram()
+
+investigate_over1000("InfantDeaths")
+```
+
 
 ## Alcohol
 Description: Alcohol, recorded per capita (15+) consumption (in liters of pure alcohol)
@@ -148,6 +180,13 @@ investigate_missing_column_values("BMI")
 
 ## under-five deaths
 Not sure if it's a rate for 1000 population, WHO site not clear.
+```{r}
+summary(life_expectancy$UnderFiveDeaths)
+#life_expectancy %>% ggplot(aes(x=life_expectancy$UnderFiveDeaths))+geom_histogram()
+
+investigate_over1000("UnderFiveDeaths")
+```
+
 
 ## Polio	
 Description (from WHO): It's probably referring to "immunization coverage among one-year-olds (%)"
@@ -193,13 +232,31 @@ life_expectancy[missing_GDP_indices,] %>%
 
 ## Population
 700 N/A (out of almost 3,000 observations)
-Min is probably wrong (population of 34?)
+Min is probably wrong (population of 34?) -- Maldives 2003
+```{r}
+investigate_missing_column_values("Population")
+summary(life_expectancy$Population)
+
+#investigate min
+min(life_expectancy[,18], na.rm=T)
+which.min(life_expectancy[,18])
+print(life_expectancy[1615,])
+```
+
 
 ## thinness  1-19 years
 Description (from WHO): this could be Prevalence of thinness among children and adolescents, BMI < -2 standard deviations below the median (crude estimate) (%)
+```{r}
+investigate_missing_column_values("Thinness_1_19_years")
+```
+
 
 ## thinness 5-9 years
 Description: this could be a subset of the category above
+```{r}
+investigate_missing_column_values("Thinness_5_9_years")
+```
+
 
 ## Income composition of resources	
 United Nations Development Programme's [Human Development Index](http://hdr.undp.org/en/content/human-development-index-hdi) in terms of income composition of resources (index ranging from 0 to 1)
