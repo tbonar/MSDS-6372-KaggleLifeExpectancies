@@ -49,6 +49,8 @@ library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(GGally)
+library(wbstats)
+library(data.table)
 
 # Set current working directory as git repository local folder
 setwd(".")
@@ -215,18 +217,46 @@ Countries' corresponding economic data was collected from United Nation website
 missing_GDP_indices <- which(is.na(life_expectancy[,'GDP']))
 length(missing_GDP_indices)
 
-# Are any specific year a key indicator of missing value?
-life_expectancy[missing_GDP_indices,] %>% 
-  group_by(Year) %>%
-  summarise(missing_GDP = length(Year))
-# 2000-2015 are missing are about even for missing data except 2013 has more
+investigate_missing_column_values("GDP")
 
-# What about country?
-life_expectancy[missing_GDP_indices,] %>% 
-  group_by(Country) %>%
-  summarise(missing_GDP = length(Country))
+# Fill missing GDP data from secondary source: World Banks -- indicator code:  NY.GDP.PCAP.CD
+GDP_per_capita <- wb_data(indicator = "NY.GDP.PCAP.CD", country = "countries_only", start_date = 2000, end_date = 2015)
+# Grab only necessary columns and map to match dataset
+GDP_per_capita <- GDP_per_capita %>% select(date, NY.GDP.PCAP.CD, country)
+colnames(GDP_per_capita) = c("Year", "GDP", "Country")
+# Check for name discrepancies
+unique(GDP_per_capita["Country"])
+unique(life_expectancy["Country"])
 
-# Fill missing GDP data from secondary source
+# Country Name Corrections to match b/w GDP and Kaggle Life Expectancy dataset
+GDP_per_capita[,'Country'] <- sub(", The", "", GDP_per_capita$Country)
+GDP_per_capita[,"Country"] <- sub("Bolivia", "Bolivia (Plurinational State of)", GDP_per_capita$Country)
+GDP_per_capita[,'Country'] <- sub("Congo, Dem. Rep.", "Congo", GDP_per_capita$Country)
+GDP_per_capita[,'Country'] <- sub("Cote d'Ivoire", "Côte d'Ivoire", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Czech Republic", "Czechia", GDP_per_capita$Country) 
+GDP_per_capita[,"Country"] <- sub("Democratic Republic of the Congo", "Congo", GDP_per_capita$Country)
+GDP_per_capita[,'Country'] <- sub("Korea, Dem. People's Rep.", "Democratic People's Republic of Korea", GDP_per_capita$Country)
+GDP_per_capita[,'Country'] <- sub("Egypt, Arab Rep.", "Egypt", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Gambia, The", "Gambia", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Iran, Islamic Rep.", "Iran (Islamic Republic of)", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Kyrgyz Republic", "Kyrgyzstan", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Lao PDR", "Lao People's Democratic Republic", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Micronesia, Fed. Sts.", "Micronesia (Federated States of)", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Korea, Rep.", "Republic of Korea", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Moldova", "Republic of Moldova", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("St. Lucia", "Saint Lucia", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("St. Vincent and the Grenadines", "Saint Vincent and the Grenadines", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Slovak Republic", "Slovakia", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Eswatini", "Swaziland", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("North Macedonia", "The former Yugoslav republic of Macedonia", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("United Kingdom", "United Kingdom of Great Britain and Northern Ireland", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("United States", "United States of America", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Vietnam", "Viet Nam", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Yemen, Rep.", "Yemen", GDP_per_capita$Country) 
+
+# Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
 
 ```
 
@@ -289,6 +319,10 @@ UNDP_HDI_Bulk_Dataset <- read.csv("data/Modified_UNDP_HDI.csv",
                                   stringsAsFactors = T)
 colnames(UNDP_HDI_Bulk_Dataset) <- sub("X", "", colnames(UNDP_HDI_Bulk_Dataset))
 UNDP_HDI_Bulk_Dataset <- UNDP_HDI_Bulk_Dataset %>% select(-("2016":"2019") & -("1990":"1999"))
+
+for(i in 1:length(missing_HDI_indices)) {
+  life_expectancy[missing_HDI_indices[i]] <- 
+}
 
 ```
 
