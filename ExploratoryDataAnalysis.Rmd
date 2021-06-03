@@ -272,13 +272,65 @@ GDP_per_capita[,'Country'] <- sub("Yemen, Rep.", "Yemen", GDP_per_capita$Country
 700 N/A (out of almost 3,000 observations)
 Min is probably wrong (population of 34?) -- Maldives 2003
 ```{r}
+#Looking at missing values
 investigate_missing_column_values("Population")
 summary(life_expectancy$Population)
 
-#investigate min
+#investigate minimum population value
 min(life_expectancy[,18], na.rm=T)
 which.min(life_expectancy[,18])
 print(life_expectancy[1615,])
+
+#List all missing rows
+missing_pop_indices <- which(is.na(life_expectancy[,'Population']))
+length(missing_pop_indices)
+
+#Which countries do we need to import data for?
+miss_pop <- life_expectancy %>% filter(is.na(life_expectancy[,'Population'])) #all missing pop data
+miss_pop$Country <- as.factor(miss_pop$Country)
+levels(miss_pop$Country)
+
+#Import World Bank Population Data: https://data.worldbank.org/indicator/SP.POP.TOTL
+wb_population = read.csv("data/API_SP.POP.TOTL_DS2_en_csv_v2_2445260.csv", header = FALSE)
+
+#Tidy Data
+wb_pop <- wb_population[4:66,]
+colnames(wb_pop)<- wb_population[3,]
+wb_pop <- wb_pop[c(1,45:60)]
+wb_pop <- gather(wb_pop, Year, Population, '2000':'2015' , factor_key=TRUE)
+names(wb_pop)[1] <- "Country"
+
+#Columns that need to be renamed in order to merge (WB data is missing Cook Islands and Niue)
+wb_data[,'Country'] <- sub("Bahamas, The", "Bahamas", wb_data$Country) 
+wb_data[,'Country'] <- sub("Bolivia", "Bolivia (Plurinational State of)", wb_data$Country) 
+wb_data[,'Country'] <- sub("Cote d'Ivoire", "Côte d'Ivoire", wb_data$Country) 
+wb_data[,'Country'] <- sub("Czech Republic", "Czechia", wb_data$Country) 
+wb_data[,'Country'] <- sub("Korea, Dem. People's Rep.", "Democratic People's Republic of Korea", wb_data$Country) 
+wb_data[,'Country'] <- sub("Congo, Dem. Rep.", "Democratic Republic of the Congo", wb_data$Country) 
+wb_data[,'Country'] <- sub("Egypt, Arab Rep.", "Egypt", wb_data$Country) 
+wb_data[,'Country'] <- sub("Gambia, The", "Gambia", wb_data$Country) 
+wb_data[,'Country'] <- sub("Iran, Islamic Rep.", "Iran (Islamic Republic of)", wb_data$Country) 
+wb_data[,'Country'] <- sub("Kyrgyz Republic", "Kyrgyzstan", wb_data$Country) 
+wb_data[,'Country'] <- sub("Lao PDR", "Lao People's Democratic Republic", wb_data$Country) 
+wb_data[,'Country'] <- sub("Micronesia, Fed. Sts.", "Micronesia (Federated States of)", wb_data$Country) 
+wb_data[,'Country'] <- sub("Korea, Rep.", "Republic of Korea", wb_data$Country) 
+wb_data[,'Country'] <- sub("Moldova", "Republic of Moldova", wb_data$Country) 
+wb_data[,'Country'] <- sub("St. Kitts and Nevis", "Saint Kitts and Nevis", wb_data$Country) 
+wb_data[,'Country'] <- sub("St. Lucia", "Saint Lucia", wb_data$Country) 
+wb_data[,'Country'] <- sub("St. Vincent and the Grenadines", "Saint Vincent and the Grenadines", wb_data$Country) 
+wb_data[,'Country'] <- sub("Slovak Republic", "Slovakia", wb_data$Country) 
+wb_data[,'Country'] <- sub("North Macedonia", "The former Yugoslav republic of Macedonia", wb_data$Country) 
+wb_data[,'Country'] <- sub("United Kingdom", "United Kingdom of Great Britain and Northern Ireland", wb_data$Country) 
+wb_data[,'Country'] <- sub("United States", "United States of America", wb_data$Country) 
+wb_data[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", wb_data$Country) 
+wb_data[,'Country'] <- sub("", "", wb_data$Country) 
+wb_data[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", wb_data$Country) 
+wb_data[,'Country'] <- sub("Vietnam", "Viet nam", wb_data$Country) 
+wb_data[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_data$Country) 
+
+#Replacing null data with World Bank population data
+#(still working on this)
+#left_join(life_expectancy, population, by = c("Country","Year"))
 ```
 
 
