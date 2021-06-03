@@ -302,7 +302,8 @@ names(wb_pop)[1] <- "Country"
 
 #Columns that need to be renamed in order to merge (WB data is missing Cook Islands and Niue)
 wb_data[,'Country'] <- sub("Bahamas, The", "Bahamas", wb_data$Country) 
-wb_data[,'Country'] <- sub("Bolivia", "Bolivia (Plurinational State of)", wb_data$Country) 
+wb_data[,'Country'] <- sub("Bolivia", "Bolivia (Plurinational State of)", wb_data$Country)
+wb_data[,'Country'] <- sub("Congo, Rep.", "Congo", wb_data$Country) 
 wb_data[,'Country'] <- sub("Cote d'Ivoire", "Côte d'Ivoire", wb_data$Country) 
 wb_data[,'Country'] <- sub("Czech Republic", "Czechia", wb_data$Country) 
 wb_data[,'Country'] <- sub("Korea, Dem. People's Rep.", "Democratic People's Republic of Korea", wb_data$Country) 
@@ -323,14 +324,13 @@ wb_data[,'Country'] <- sub("North Macedonia", "The former Yugoslav republic of M
 wb_data[,'Country'] <- sub("United Kingdom", "United Kingdom of Great Britain and Northern Ireland", wb_data$Country) 
 wb_data[,'Country'] <- sub("United States", "United States of America", wb_data$Country) 
 wb_data[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", wb_data$Country) 
-wb_data[,'Country'] <- sub("", "", wb_data$Country) 
 wb_data[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", wb_data$Country) 
 wb_data[,'Country'] <- sub("Vietnam", "Viet nam", wb_data$Country) 
 wb_data[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_data$Country) 
 
 #Replacing null data with World Bank population data
-#(still working on this)
-#left_join(life_expectancy, population, by = c("Country","Year"))
+#still working on this
+#left_join(life_expectancy, Population, by = c("Country","Year")) 
 ```
 
 
