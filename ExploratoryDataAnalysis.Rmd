@@ -90,6 +90,8 @@ life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy
                                                'IncomeCompositionOfResources' = 'Income.composition.of.resources')
 
 summary(life_expectancy)
+sum(complete.cases(life_expectancy))
+sum(!complete.cases(life_expectancy))
 ```
 
 # Comments on each column
@@ -98,7 +100,6 @@ Description taken from one of the following:
 - https://www.who.int/data/gho/data/indicators/indicators-index (and will be marked from )
 
 ## Country
-TODO: remove any countries that doesn't have the 16 years of data
 ```{r Country as Factor}
 # Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
 life_expectancy %>% 
@@ -115,14 +116,37 @@ unique(life_expectancy[,"Country"])
 
 investigate_missing_column_values("Country")
 
+# We will remove any countries for which we don't have 16 years of data: Cook Islands, Dominica, Marshall Islands, Monaco, Nauru, Niue, Palau, Saint Kitts and Nevis, San Marino, Tuvalu	
+life_expectancy <- life_expectancy [((life_expectancy$Country != "Cook Islands") &
+                                       (life_expectancy$Country != "Dominica") &
+                                       (life_expectancy$Country != "Marshall Islands") &
+                                       (life_expectancy$Country != "Monaco") &
+                                       (life_expectancy$Country != "Nauru") &
+                                       (life_expectancy$Country != "Niue") &
+                                       (life_expectancy$Country != "Palau") &
+                                       (life_expectancy$Country != "Saint Kitts and Nevis") &
+                                       (life_expectancy$Country != "San Marino") &
+                                       (life_expectancy$Country != "Tuvalu")),]
+
+nrow(life_expectancy)
+# 10 countries with only 1 year of data were removed and the data frame went from 2938 to 2928 rows
 ```
 
 ## Year
-TODO: only consider 2000 to 2012; avoid issue with 2014 as outlier
 ```{r Year as Factor}
 # Transform Years into factor
 life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
 unique(life_expectancy[,"Year"])
+
+# Filtering 2013 to 2015: 
+# - Both 2013 and 2015 have a significant number of missing values
+# - 2014 is also removed so that we only have consecutive years in the dataframe
+life_expectancy <- life_expectancy [((life_expectancy$Year != 2013) &
+                                       (life_expectancy$Year != 2014) &
+                                       (life_expectancy$Year != 2015)),]
+
+nrow(life_expectancy)
+# 3 years were removed and with 183 countries left, the dataframe went from 2928 to 2379 rows
 ```
 
 ## Status
