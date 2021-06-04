@@ -384,7 +384,7 @@ Min is probably wrong (population of 34?) -- Maldives 2003
 investigate_missing_column_values("Population")
 summary(life_expectancy$Population)
 
-#investigate minimum population value
+#investigate minimum population value: Maldives, should be 302683
 min(life_expectancy[,18], na.rm=T)
 which.min(life_expectancy[,18])
 print(life_expectancy[1615,])
@@ -507,3 +507,14 @@ Data accuracy: most of it seems accurate but there are some issues, for example 
 ```{r}
 investigate_missing_column_values("Schooling")
 ```
+
+#Scatterplots before data cleaning
+```{r}
+pairs(life_expectancy[,c(4:7)])
+pairs(life_expectancy[,c(4,8:10)])
+pairs(life_expectancy[,c(4,11:13)])
+pairs(life_expectancy[,c(4,14:16)])
+pairs(life_expectancy[,c(4,17:19)])
+pairs(life_expectancy[,c(4,20:22)])
+```
+
