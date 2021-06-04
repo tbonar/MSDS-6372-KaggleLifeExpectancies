@@ -97,7 +97,8 @@ Description taken from one of the following:
 - https://www.kaggle.com/kumarajarshi/life-expectancy-who: Data Explorer -> Column
 - https://www.who.int/data/gho/data/indicators/indicators-index (and will be marked from )
 
-## Country - need to discuss if we should even consider it as a candidate for the model or not?
+## Country
+TODO: remove any countries that doesn't have the 16 years of data
 ```{r Country as Factor}
 # Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
 life_expectancy %>% 
@@ -111,9 +112,13 @@ life_expectancy %>%
 # Transform into factor for easier analysis
 life_expectancy[,'Country'] <- factor(life_expectancy[,'Country'])
 unique(life_expectancy[,"Country"])
+
+investigate_missing_column_values("Country")
+
 ```
 
-## Year - need to discuss if we should restrict to 2000 to 2014 (instead of 2015) because of missing data in 2015; maybe also remove 2013?
+## Year
+TODO: only consider 2000 to 2012; avoid issue with 2014 as outlier
 ```{r Year as Factor}
 # Transform Years into factor
 life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
@@ -161,39 +166,6 @@ investigate_over1000("InfantDeaths")
 
 #India 2000-2012 https://data.worldbank.org/indicator/SP.DYN.IMRT.IN 
 
-#2000     66.7
-life_expectancy$InfantDeaths[1202] <- 66.7
-#2001     64.4
-life_expectancy$InfantDeaths[1201] <- 64.4
-#2002     62.2
-life_expectancy$InfantDeaths[1200] <- 62.2
-#2003     60
-life_expectancy$InfantDeaths[1199] <- 60
-#2004     57.8
-life_expectancy$InfantDeaths[1198] <- 57.8
-#2005     55.7
-life_expectancy$InfantDeaths[1197] <- 55.7
-#2006     53.7
-life_expectancy$InfantDeaths[1196] <- 53.7
-#2007     51.6
-life_expectancy$InfantDeaths[1195] <- 51.6
-#2008     49.4
-life_expectancy$InfantDeaths[1194] <- 49.4
-#2009     47.3
-life_expectancy$InfantDeaths[1193] <- 47.3
-#2010     45.1
-life_expectancy$InfantDeaths[1192] <- 45.1
-#2011     43
-life_expectancy$InfantDeaths[1191] <- 43
-#2012     40.9
-life_expectancy$InfantDeaths[1190] <- 40.9
-#2013     38.8
-life_expectancy$InfantDeaths[1189] <- 38.8
-#2014     36.9
-life_expectancy$InfantDeaths[1188] <- 36.9
-#2015     34.9
-life_expectancy$InfantDeaths[1187] <- 34.9
-
 life_expectancy %>% ggplot(aes(x=life_expectancy$InfantDeaths))+geom_histogram()
 investigate_over200("InfantDeaths")
 
@@ -211,6 +183,7 @@ Description: Alcohol, recorded per capita (15+) consumption (in liters of pure a
 
 Missing values: 200 N/A (out of almost 3,000 observations) - most of the missing data is from the most recent year (2015). One country, South Sudan, doesn't have any data for all the years  (it seems that alcohol was illegal during this timeframe - we could set these values to 0)
 Data accuracy: The data seems to make sense (reasonable min and max, low consumption in mainly Muslim countries, for example)
+TODO: set South Sudan to 0 and check what's left
 
 ```{r}
 investigate_missing_column_values("Alcohol")
@@ -225,11 +198,20 @@ A lot of problem in this column, for example:
 ## Hepatitis B
 Description: Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
 500 N/A (out of almost 3,000 observations)
+-> We have fewer than 80% of the value so consider dropping this column
+
+```{r}
+investigate_missing_column_values("HepatitisB")
+```
 
 ## Measles
 Measles - number of reported cases per 1000 population
 A lot of problem in this column, for example:
 - Max.: 212183.0
+
+```{r}
+investigate_missing_column_values("Measles")
+```
 
 ## BMI
 From WHO: It is defined as a person's weight in kilograms divided by the square of his height in meters (kg/m2). The WHO definition is:
@@ -243,6 +225,9 @@ Data accuracy: A lot of problem in this column, for example:
 It's not even consistent within a country, for example in China:
 - in 2013: 3.9
 - In 2015: 32.9
+
+Consider dropping this one, too many inaccuracies
+
 
 ```{r}
 investigate_missing_column_values("BMI")
@@ -258,39 +243,6 @@ investigate_over1000("UnderFiveDeaths")
 #India 2000-2012 Mortality rate, under-5 (per 1,000 live births) https://data.worldbank.org/indicator/SH.DYN.MORT 
 
 #which(life_expectancy$Country == "India" & life_expectancy$Year == "2000")
-
-#2000     91.8
-life_expectancy$UnderFiveDeaths[1202] <- 91.8
-#2001     88.2
-life_expectancy$UnderFiveDeaths[1201] <- 88.2
-#2002     84.6
-life_expectancy$UnderFiveDeaths[1200] <- 84.6
-#2003     81.2
-life_expectancy$UnderFiveDeaths[1199] <- 81.2
-#2004     77.8
-life_expectancy$UnderFiveDeaths[1198] <- 77.8
-#2005     74.5
-life_expectancy$UnderFiveDeaths[1197] <- 74.5
-#2006     71.2
-life_expectancy$UnderFiveDeaths[1196] <- 71.2
-#2007     67.9
-life_expectancy$UnderFiveDeaths[1195] <- 67.9
-#2008     64.7
-life_expectancy$UnderFiveDeaths[1194] <- 64.7
-#2009     61.4
-life_expectancy$UnderFiveDeaths[1193] <- 61.4
-#2010     58.2
-life_expectancy$UnderFiveDeaths[1192] <- 58.2
-#2011     55.1
-life_expectancy$UnderFiveDeaths[1191] <- 55.1
-#2012     52
-life_expectancy$UnderFiveDeaths[1190] <- 52
-#2013     49.1
-life_expectancy$UnderFiveDeaths[1189] <- 49.1
-#2014     46.2
-life_expectancy$UnderFiveDeaths[1188] <- 46.2
-#2015     43.5
-life_expectancy$UnderFiveDeaths[1187] <- 43.5
 
 life_expectancy %>% ggplot(aes(x=life_expectancy$UnderFiveDeaths))+geom_histogram()
 investigate_over200('UnderFiveDeaths')
@@ -324,6 +276,9 @@ investigate_missing_column_values("Diphtheria")
 
 ## HIV/AIDS
 Description: there are 23 indicators related to HIV on the WHO web site, I'm not sure which one it is
+```{r}
+investigate_missing_column_values("HIV_AIDS")
+```
 
 ## GDP
 Countries' corresponding economic data was collected from United Nation website
@@ -503,6 +458,8 @@ Definition: Average number of completed years of education of a country's popula
 
 Missing values: 10 countries are missing all the values, we may have to fill some of them manually
 Data accuracy: most of it seems accurate but there are some issues, for example Turkmenistan where is's 0 for 2000 and 2001 and 10.2 for 2002
+
+Probably drop it; missing data and covered by HDI
 
 ```{r}
 investigate_missing_column_values("Schooling")
