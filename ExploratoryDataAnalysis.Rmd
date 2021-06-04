@@ -42,6 +42,23 @@ investigate_over1000 <- function(column_name) {
 
 }
 
+# Function to investigate over 200 values (for infant deaths and under 5 deaths)
+investigate_over200 <- function(column_name) {
+  indices200 <- which(life_expectancy[,column_name]>200)
+  print(length(indices200))
+
+  # Are any specific year a key indicator of missing value?
+  print(life_expectancy[indices200,] %>% 
+    group_by(Year) %>%
+    summarise(missing = length(Year)))
+
+  # What about country?
+  print(life_expectancy[indices200,] %>% 
+  group_by(Country) %>%
+  summarise(missing = length(Country)))
+
+}
+
 
 # Libraries to load
 library(plyr)
@@ -136,12 +153,56 @@ investigate_missing_column_values("AdultMortality")
 
 ## infant deaths
 Description: Number of Infant Deaths per 1000 population
-The maximum of 1800.0 seems to be inaccurate
+The maximum of 1800.0 seems to be inaccurate (India 2000-2012)
 ```{r}
 summary(life_expectancy$InfantDeaths)
-life_expectancy %>% ggplot(aes(x=life_expectancy$InfantDeaths))+geom_histogram()
 
 investigate_over1000("InfantDeaths")
+
+#India 2000-2012 https://data.worldbank.org/indicator/SP.DYN.IMRT.IN 
+
+#2000     66.7
+life_expectancy$InfantDeaths[1202] <- 66.7
+#2001     64.4
+life_expectancy$InfantDeaths[1201] <- 64.4
+#2002     62.2
+life_expectancy$InfantDeaths[1200] <- 62.2
+#2003     60
+life_expectancy$InfantDeaths[1199] <- 60
+#2004     57.8
+life_expectancy$InfantDeaths[1198] <- 57.8
+#2005     55.7
+life_expectancy$InfantDeaths[1197] <- 55.7
+#2006     53.7
+life_expectancy$InfantDeaths[1196] <- 53.7
+#2007     51.6
+life_expectancy$InfantDeaths[1195] <- 51.6
+#2008     49.4
+life_expectancy$InfantDeaths[1194] <- 49.4
+#2009     47.3
+life_expectancy$InfantDeaths[1193] <- 47.3
+#2010     45.1
+life_expectancy$InfantDeaths[1192] <- 45.1
+#2011     43
+life_expectancy$InfantDeaths[1191] <- 43
+#2012     40.9
+life_expectancy$InfantDeaths[1190] <- 40.9
+#2013     38.8
+life_expectancy$InfantDeaths[1189] <- 38.8
+#2014     36.9
+life_expectancy$InfantDeaths[1188] <- 36.9
+#2015     34.9
+life_expectancy$InfantDeaths[1187] <- 34.9
+
+life_expectancy %>% ggplot(aes(x=life_expectancy$InfantDeaths))+geom_histogram()
+investigate_over200("InfantDeaths")
+
+#Bangladesh- incorrect
+#China- incorrect
+#Democratic Republic of Congo- incorrect
+#Ethiopia- incorrect
+#Nigeria- incorrect
+#Pakistan- incorrect
 ```
 
 
@@ -191,9 +252,56 @@ investigate_missing_column_values("BMI")
 Not sure if it's a rate for 1000 population, WHO site not clear.
 ```{r}
 summary(life_expectancy$UnderFiveDeaths)
-#life_expectancy %>% ggplot(aes(x=life_expectancy$UnderFiveDeaths))+geom_histogram()
 
 investigate_over1000("UnderFiveDeaths")
+
+#India 2000-2012 Mortality rate, under-5 (per 1,000 live births) https://data.worldbank.org/indicator/SH.DYN.MORT 
+
+#which(life_expectancy$Country == "India" & life_expectancy$Year == "2000")
+
+#2000     91.8
+life_expectancy$UnderFiveDeaths[1202] <- 91.8
+#2001     88.2
+life_expectancy$UnderFiveDeaths[1201] <- 88.2
+#2002     84.6
+life_expectancy$UnderFiveDeaths[1200] <- 84.6
+#2003     81.2
+life_expectancy$UnderFiveDeaths[1199] <- 81.2
+#2004     77.8
+life_expectancy$UnderFiveDeaths[1198] <- 77.8
+#2005     74.5
+life_expectancy$UnderFiveDeaths[1197] <- 74.5
+#2006     71.2
+life_expectancy$UnderFiveDeaths[1196] <- 71.2
+#2007     67.9
+life_expectancy$UnderFiveDeaths[1195] <- 67.9
+#2008     64.7
+life_expectancy$UnderFiveDeaths[1194] <- 64.7
+#2009     61.4
+life_expectancy$UnderFiveDeaths[1193] <- 61.4
+#2010     58.2
+life_expectancy$UnderFiveDeaths[1192] <- 58.2
+#2011     55.1
+life_expectancy$UnderFiveDeaths[1191] <- 55.1
+#2012     52
+life_expectancy$UnderFiveDeaths[1190] <- 52
+#2013     49.1
+life_expectancy$UnderFiveDeaths[1189] <- 49.1
+#2014     46.2
+life_expectancy$UnderFiveDeaths[1188] <- 46.2
+#2015     43.5
+life_expectancy$UnderFiveDeaths[1187] <- 43.5
+
+life_expectancy %>% ggplot(aes(x=life_expectancy$UnderFiveDeaths))+geom_histogram()
+investigate_over200('UnderFiveDeaths')
+
+#Bangladesh- incorrect
+#China- incorrect
+#Democratic Republic of Congo- incorrect
+#Ethiopia- incorrect
+#Indonesia- incorrect
+#Nigeria- incorrect
+#Pakistan- incorrect
 ```
 
 
@@ -298,38 +406,37 @@ wb_pop <- wb_population[4:66,]
 colnames(wb_pop)<- wb_population[3,]
 wb_pop <- wb_pop[c(1,45:60)]
 wb_pop <- gather(wb_pop, Year, Population, '2000':'2015' , factor_key=TRUE)
-names(wb_pop)[1] <- "Country"
+wb_pop <- wb_pop %>% rename('Country' = 'Country Name')
 
 #Columns that need to be renamed in order to merge (WB data is missing Cook Islands and Niue)
-wb_data[,'Country'] <- sub("Bahamas, The", "Bahamas", wb_data$Country) 
-wb_data[,'Country'] <- sub("Bolivia", "Bolivia (Plurinational State of)", wb_data$Country)
-wb_data[,'Country'] <- sub("Congo, Rep.", "Congo", wb_data$Country) 
-wb_data[,'Country'] <- sub("Cote d'Ivoire", "Côte d'Ivoire", wb_data$Country) 
-wb_data[,'Country'] <- sub("Czech Republic", "Czechia", wb_data$Country) 
-wb_data[,'Country'] <- sub("Korea, Dem. People's Rep.", "Democratic People's Republic of Korea", wb_data$Country) 
-wb_data[,'Country'] <- sub("Congo, Dem. Rep.", "Democratic Republic of the Congo", wb_data$Country) 
-wb_data[,'Country'] <- sub("Egypt, Arab Rep.", "Egypt", wb_data$Country) 
-wb_data[,'Country'] <- sub("Gambia, The", "Gambia", wb_data$Country) 
-wb_data[,'Country'] <- sub("Iran, Islamic Rep.", "Iran (Islamic Republic of)", wb_data$Country) 
-wb_data[,'Country'] <- sub("Kyrgyz Republic", "Kyrgyzstan", wb_data$Country) 
-wb_data[,'Country'] <- sub("Lao PDR", "Lao People's Democratic Republic", wb_data$Country) 
-wb_data[,'Country'] <- sub("Micronesia, Fed. Sts.", "Micronesia (Federated States of)", wb_data$Country) 
-wb_data[,'Country'] <- sub("Korea, Rep.", "Republic of Korea", wb_data$Country) 
-wb_data[,'Country'] <- sub("Moldova", "Republic of Moldova", wb_data$Country) 
-wb_data[,'Country'] <- sub("St. Kitts and Nevis", "Saint Kitts and Nevis", wb_data$Country) 
-wb_data[,'Country'] <- sub("St. Lucia", "Saint Lucia", wb_data$Country) 
-wb_data[,'Country'] <- sub("St. Vincent and the Grenadines", "Saint Vincent and the Grenadines", wb_data$Country) 
-wb_data[,'Country'] <- sub("Slovak Republic", "Slovakia", wb_data$Country) 
-wb_data[,'Country'] <- sub("North Macedonia", "The former Yugoslav republic of Macedonia", wb_data$Country) 
-wb_data[,'Country'] <- sub("United Kingdom", "United Kingdom of Great Britain and Northern Ireland", wb_data$Country) 
-wb_data[,'Country'] <- sub("United States", "United States of America", wb_data$Country) 
-wb_data[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", wb_data$Country) 
-wb_data[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", wb_data$Country) 
-wb_data[,'Country'] <- sub("Vietnam", "Viet nam", wb_data$Country) 
-wb_data[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_data$Country) 
+wb_pop[,'Country'] <- sub("Bahamas, The", "Bahamas", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Bolivia", "Bolivia (Plurinational State of)", wb_pop$Country)
+wb_pop[,'Country'] <- sub("Congo, Rep.", "Congo", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Cote d'Ivoire", "Côte d'Ivoire", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Czech Republic", "Czechia", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Korea, Dem. People's Rep.", "Democratic People's Republic of Korea", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Congo, Dem. Rep.", "Democratic Republic of the Congo", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Egypt, Arab Rep.", "Egypt", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Gambia, The", "Gambia", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Iran, Islamic Rep.", "Iran (Islamic Republic of)", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Kyrgyz Republic", "Kyrgyzstan", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Lao PDR", "Lao People's Democratic Republic", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Micronesia, Fed. Sts.", "Micronesia (Federated States of)", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Korea, Rep.", "Republic of Korea", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Moldova", "Republic of Moldova", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("St. Kitts and Nevis", "Saint Kitts and Nevis", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("St. Lucia", "Saint Lucia", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("St. Vincent and the Grenadines", "Saint Vincent and the Grenadines", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Slovak Republic", "Slovakia", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("North Macedonia", "The former Yugoslav republic of Macedonia", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("United Kingdom", "United Kingdom of Great Britain and Northern Ireland", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("United States", "United States of America", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Vietnam", "Viet nam", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_pop$Country) 
 
 #Replacing null data with World Bank population data
-#still working on this
 #left_join(life_expectancy, Population, by = c("Country","Year")) 
 ```
 
