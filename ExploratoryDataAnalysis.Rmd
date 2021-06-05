@@ -128,8 +128,12 @@ life_expectancy <- life_expectancy [((life_expectancy$Country != "Cook Islands")
                                        (life_expectancy$Country != "San Marino") &
                                        (life_expectancy$Country != "Tuvalu")),]
 
+
+# South Sudan gained independence from the Republic of the Sudan in 2011 (https://en.wikipedia.org/wiki/South_Sudan). Sudan is already in our dataset so the data about South Sudan prior to 2011 is questionable and we will remove South Sudan from the data set
+life_expectancy <- life_expectancy [(life_expectancy$Country != "South Sudan"),]
+
 nrow(life_expectancy)
-# 10 countries with only 1 year of data were removed and the data frame went from 2938 to 2928 rows
+# 10 countries with only 1 year of data were removed; 1 country was completely removed and the data frame went from 2938 to 2912 rows, so a difference of 26 rows, which makes sense: 10*1 + 16 = 26
 ```
 
 ## Year
@@ -146,7 +150,7 @@ life_expectancy <- life_expectancy [((life_expectancy$Year != 2013) &
                                        (life_expectancy$Year != 2015)),]
 
 nrow(life_expectancy)
-# 3 years were removed and with 183 countries left, the dataframe went from 2928 to 2379 rows
+# 3 years were removed and with 182 countries left, the dataframe went from 2912 to 2366 rows, so a difference of 546 rows, which makes sense: 182*3 = 546
 ```
 
 ## Status
@@ -206,18 +210,21 @@ investigate_over200("InfantDeaths")
 # Fill incorrect InfantDeaths data from secondary source: World Banks -- indicator code:  SP.DYN.IMRT.IN 
 wb_infant <- wb_data(indicator = "SP.DYN.IMRT.IN", country = "countries_only", start_date = 2000, end_date = 2015)
 # Grab only necessary columns and map to match dataset
-wb_infant <- wb_infant %>% select(date, SH.DYN.MORT , country)
-colnames(wb_infant) = c("Year", "InfantDeaths", "Country")
+
+# Commenting code that's causing an error:
+# Error: Can't subset columns that don't exist.
+# x Column `SH.DYN.MORT` doesn't exist.
+
+# wb_infant <- wb_infant %>% select(date, SH.DYN.MORT , country)
+# colnames(wb_infant) = c("Year", "InfantDeaths", "Country")
 ```
 
 
 ## Alcohol
 Description: Alcohol, recorded per capita (15+) consumption (in liters of pure alcohol)
 
-Missing values: 200 N/A (out of almost 3,000 observations) - most of the missing data is from the most recent year (2015). One country, South Sudan, doesn't have any data for all the years  (it seems that alcohol was illegal during this timeframe - we could set these values to 0)
+Missing values: 1 value is missing for Montenegro
 Data accuracy: The data seems to make sense (reasonable min and max, low consumption in mainly Muslim countries, for example)
-TODO: set South Sudan to 0 and check what's left
-
 ```{r}
 investigate_missing_column_values("Alcohol")
 ```
