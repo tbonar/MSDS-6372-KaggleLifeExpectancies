@@ -15,13 +15,13 @@ investigate_missing_column_values <- function(column_name) {
 
   # Are any specific year a key indicator of missing value?
   print(life_expectancy[missing_indices,] %>% 
-    group_by(Year) %>%
-    summarise(missing = length(Year)))
+    group_by(Year.factor) %>%
+    summarise(missing = length(Year.factor)))
 
   # What about country?
   print(life_expectancy[missing_indices,] %>% 
-  group_by(Country) %>%
-  summarise(missing = length(Country)))
+  group_by(Country.factor) %>%
+  summarise(missing = length(Country.factor)))
 
 }
 
@@ -68,15 +68,19 @@ library(tidyverse)
 library(GGally)
 library(wbstats)
 library(data.table)
+library(caret)
+library(readr)
+library(arsenal)
+library(naniar)
 
 # Set current working directory as git repository local folder
 setwd(".")
 
 # Retrieve current dataset
-life_expectancy = read.csv("Life Expectancy Data.csv", header = TRUE, fileEncoding = "UTF-8")
+life_expectancy = read.csv("data/Life Expectancy Data.csv", header = TRUE, fileEncoding = "UTF-8")
 ```
 
-```{r}
+```{r, warning=F}
 life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy',
                                                'AdultMortality'='Adult.Mortality',
                                                'InfantDeaths'='infant.deaths',
@@ -87,11 +91,32 @@ life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy
                                                'HIV_AIDS'='HIV.AIDS',
                                                'Thinness_1_19_years' = 'thinness..1.19.years',
                                                'Thinness_5_9_years' = 'thinness.5.9.years',
-                                               'IncomeCompositionOfResources' = 'Income.composition.of.resources')
+                                               'IncCompOfResources' = 'Income.composition.of.resources')
+
+life_expectancy[,"Country.factor"] <- factor(life_expectancy[,'Country'])
+life_expectancy[,"Year.factor"] <- factor(life_expectancy[,'Year'])
 
 summary(life_expectancy)
 sum(complete.cases(life_expectancy))
 sum(!complete.cases(life_expectancy))
+
+# Create Bird's Eyes View/Overview of Missing Data using naniar lib
+vis_miss(life_expectancy, cluster = F) + # Without aggregating observations
+  labs(title = "NAs in GHO's Life Expectancy Data from 2000-2015") +
+  theme(axis.text.x = element_text(angle=90))
+vis_miss(life_expectancy, cluster = T) + # With aggregating observations
+  labs(title = "NAs in GHO's Life Expectancy Data from 2000-2015") +
+  theme(axis.text.x = element_text(angle=90))
+# Can see that Hepatitis B, GDP, Population are about missing data in similar observations
+
+# Visualizing intersection of missing data via upset plot (watch for explanation: https://www.youtube.com/watch?v=-IfF2wGw7Qk)
+gg_miss_upset(life_expectancy)
+# Can see that there's aa\ linked economic/population problem on the second most missing data between GDP_NA and Population_NA
+# While the first column, shows that most individual sets are missing Heptatitis B information
+# However, we may want ot explore into TotalExpenditure and Alcohol
+
+# Are any of these overlapping sets or NAs for any particular Country.factor or Year.factor at play for missing data?
+gg_miss_fct(x = life_expectancy[,c("HepatitisB","Population","GDP", "Year.factor")], fct = Year.factor)
 ```
 
 # Comments on each column
@@ -101,18 +126,13 @@ Description taken from one of the following:
 
 ## Country
 ```{r Country as Factor}
+
 # Check for unique countries to match expectation and transform into factor class for later analysis, should be 193 countries
 life_expectancy %>% 
   group_by(Country) %>%
   summarise(count = length(Country))
-# Check for any countries that do not have 16 rows/year of data (hint hint Tuvalu, and some others)
 
-# What year do they have?
-
-
-# Transform into factor for easier analysis
-life_expectancy[,'Country'] <- factor(life_expectancy[,'Country'])
-unique(life_expectancy[,"Country"])
+unique(life_expectancy[,"Country.factor"])
 
 investigate_missing_column_values("Country")
 
@@ -133,9 +153,7 @@ nrow(life_expectancy)
 ```
 
 ## Year
-```{r Year as Factor}
-# Transform Years into factor
-life_expectancy[,'Year'] <- factor(life_expectancy[,'Year'])
+```{r Year}
 unique(life_expectancy[,"Year"])
 
 # Filtering 2013 to 2015: 
@@ -206,7 +224,7 @@ investigate_over200("InfantDeaths")
 # Fill incorrect InfantDeaths data from secondary source: World Banks -- indicator code:  SP.DYN.IMRT.IN 
 wb_infant <- wb_data(indicator = "SP.DYN.IMRT.IN", country = "countries_only", start_date = 2000, end_date = 2015)
 # Grab only necessary columns and map to match dataset
-wb_infant <- wb_infant %>% select(date, SH.DYN.MORT , country)
+wb_infant <- wb_infant %>% select(date, SP.DYN.IMRT.IN , country)
 colnames(wb_infant) = c("Year", "InfantDeaths", "Country")
 ```
 
@@ -332,18 +350,18 @@ length(missing_GDP_indices)
 investigate_missing_column_values("GDP")
 
 # Fill missing GDP data from secondary source: World Banks -- indicator code:  NY.GDP.PCAP.CD
-GDP_per_capita <- wb_data(indicator = "NY.GDP.PCAP.CD", country = "countries_only", start_date = 2000, end_date = 2015)
+GDP_per_capita <- wb_data(indicator = "NY.GDP.PCAP.CD", country = "countries_only", start_date = 2000, end_date = 2012)
 # Grab only necessary columns and map to match dataset
 GDP_per_capita <- GDP_per_capita %>% select(date, NY.GDP.PCAP.CD, country)
-colnames(GDP_per_capita) = c("Year", "GDP", "Country")
+colnames(GDP_per_capita) = c("Year", "GDP_per_capita", "Country")
 # Check for name discrepancies
-unique(GDP_per_capita["Country"])
-unique(life_expectancy["Country"])
+summary(comparedf(life_expectancy, GDP_per_capita, by = "Country", tol.vars = "Country"))
 
 # Country Name Corrections to match b/w GDP and Kaggle Life Expectancy dataset
 GDP_per_capita[,'Country'] <- sub(", The", "", GDP_per_capita$Country)
 GDP_per_capita[,"Country"] <- sub("Bolivia", "Bolivia (Plurinational State of)", GDP_per_capita$Country)
-GDP_per_capita[,'Country'] <- sub("Congo, Dem. Rep.", "Congo", GDP_per_capita$Country)
+GDP_per_capita[,'Country'] <- sub("Congo, Dem. Rep.", "Democratic Republic of the Congo", GDP_per_capita$Country)
+GDP_per_capita[,'Country'] <- sub("Congo, Rep.", "Congo", GDP_per_capita$Country)
 GDP_per_capita[,'Country'] <- sub("Cote d'Ivoire", "Côte d'Ivoire", GDP_per_capita$Country) 
 GDP_per_capita[,'Country'] <- sub("Czech Republic", "Czechia", GDP_per_capita$Country) 
 GDP_per_capita[,"Country"] <- sub("Democratic Republic of the Congo", "Congo", GDP_per_capita$Country)
@@ -366,10 +384,17 @@ GDP_per_capita[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", GDP
 GDP_per_capita[,'Country'] <- sub("United States", "United States of America", GDP_per_capita$Country) 
 GDP_per_capita[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", GDP_per_capita$Country) 
 GDP_per_capita[,'Country'] <- sub("Vietnam", "Viet Nam", GDP_per_capita$Country) 
-GDP_per_capita[,'Country'] <- sub("Yemen, Rep.", "Yemen", GDP_per_capita$Country) 
+GDP_per_capita[,'Country'] <- sub("Yemen, Rep.", "Yemen", GDP_per_capita$Country)
+
+summary(comparedf(life_expectancy, GDP_per_capita, by = "Country", tol.vars = "Country"))
 
 # Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
+life_expectancy_GDP <- left_join(life_expectancy, GDP_per_capita, by = c("Country","Year"))
+which(is.na(life_expectancy_GDP[,'GDP']))
 
+life_expectancy_GDP %>% ggplot(aes(x = Year, y = GDP)) + 
+  geom_point(size=.75) +
+  geom_jitter()
 ```
 
 ## Population
@@ -465,7 +490,7 @@ United Nations Development Programme's [Human Development Index](http://hdr.undp
 
 ```{r}
 # What rows are missing HDI?
-missing_HDI_indices <- which(is.na(life_expectancy[,'IncomeCompositionOfResources']))
+missing_HDI_indices <- which(is.na(life_expectancy[,'IncCompOfResources']))
 length(missing_HDI_indices)
 
 # Are any specific year a key indicator of missing value?
@@ -522,4 +547,3 @@ pairs(life_expectancy[,c(4,14:16)])
 pairs(life_expectancy[,c(4,17:19)])
 pairs(life_expectancy[,c(4,20:22)])
 ```
-
