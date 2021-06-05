@@ -168,6 +168,7 @@ After the change, the number of rows with Developed increased by 690-512=178 (wi
 
 ## Life expectancy
 Description (from WHO): This seems to be "Life expectancy at birth (years)" (the other option "Life expectancy at age 60 (years)" is not consistent with the data)
+Missing Values: 10 out of entire dataset, after range restriction no missing values remain
 ```{r}
 investigate_missing_column_values("LifeExpectancy")
 ```
@@ -175,6 +176,7 @@ investigate_missing_column_values("LifeExpectancy")
 
 ## Adult Mortality
 Description: Adult Mortality Rates of both sexes (probability of dying between 15 and 60 years per 1000 population)
+Missing Values: 10 out of entire dataset, after range restriction no missing values remain
 ```{r}
 investigate_missing_column_values("AdultMortality")
 ```
@@ -199,6 +201,13 @@ investigate_over200("InfantDeaths")
 #Ethiopia- incorrect
 #Nigeria- incorrect
 #Pakistan- incorrect
+
+###DATA PREP: Merge Function for missing/incorrect data
+# Fill incorrect InfantDeaths data from secondary source: World Banks -- indicator code:  SP.DYN.IMRT.IN 
+wb_infant <- wb_data(indicator = "SP.DYN.IMRT.IN", country = "countries_only", start_date = 2000, end_date = 2015)
+# Grab only necessary columns and map to match dataset
+wb_infant <- wb_infant %>% select(date, SH.DYN.MORT , country)
+colnames(wb_infant) = c("Year", "InfantDeaths", "Country")
 ```
 
 
@@ -278,6 +287,14 @@ investigate_over200('UnderFiveDeaths')
 #Indonesia- incorrect
 #Nigeria- incorrect
 #Pakistan- incorrect
+
+###DATA PREP: Merge Function for missing/incorrect data
+# Fill incorrect UnerFiveDeaths data from secondary source: World Banks -- indicator code:  SH.DYN.MORT 
+wb_under5 <- wb_data(indicator = "SH.DYN.MORT", country = "countries_only", start_date = 2000, end_date = 2015)
+# Grab only necessary columns and map to match dataset
+wb_under5 <- wb_under5 %>% select(date, SH.DYN.MORT , country)
+colnames(wb_under5) = c("Year", "UnderFiveDeaths", "Country")
+
 ```
 
 
@@ -415,13 +432,19 @@ wb_pop[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)",
 wb_pop[,'Country'] <- sub("Vietnam", "Viet nam", wb_pop$Country) 
 wb_pop[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_pop$Country) 
 
-#Replacing null data with World Bank population data
-#left_join(life_expectancy, Population, by = c("Country","Year")) 
+
+###DATA PREP: Merge Function for missing/incorrect data
+# Fill mising Population data from secondary source: World Banks -- indicator code:  SP.POP.TOTL
+wb_pop2 <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_date = 2000, end_date = 2015)
+# Grab only necessary columns and map to match dataset
+wb_pop2 <- wb_pop2 %>% select(date, SP.POP.TOTL , country)
+colnames(wb_pop2) = c("Year", "Population", "Country")
 ```
 
 
 ## thinness  1-19 years
 Description (from WHO): this could be Prevalence of thinness among children and adolescents, BMI < -2 standard deviations below the median (crude estimate) (%)
+Missing Values: 34 missing values before data range restriction, 26 after (South Sudan and Sudan 2000-2009)
 ```{r}
 investigate_missing_column_values("Thinness_1_19_years")
 ```
@@ -429,6 +452,7 @@ investigate_missing_column_values("Thinness_1_19_years")
 
 ## thinness 5-9 years
 Description: this could be a subset of the category above
+Missing Values: 34 missing values before data range restriction, 26 after (South Sudan and Sudan 2000-2009)
 ```{r}
 investigate_missing_column_values("Thinness_5_9_years")
 ```
