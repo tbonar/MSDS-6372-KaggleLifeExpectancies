@@ -97,8 +97,6 @@ life_expectancy[,"Year.factor"] <- factor(life_expectancy[,'Year'])
 ```
 
 ```{r, warning=F}
-
-
 summary(life_expectancy)
 sum(complete.cases(life_expectancy))
 sum(!complete.cases(life_expectancy))
@@ -654,7 +652,7 @@ set.seed(1234)
 
 # TODO: add more candidate predictors, just a few were added to see if this works; also I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
 
-glmnet.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+glmnet.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                data=training,
                method="glmnet",
                trControl=fitControl,
@@ -691,8 +689,7 @@ plot(varImp(glmnet.fit))
 
 ################################################
 #Stepwise Regression Using the AIC metric  NO CV
-set.seed(1234)
-stepwise.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+stepwise.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                   data=training,
                   method="glmStepAIC",direction="backward",trace=0,
                   trControl=fitControl,
@@ -724,7 +721,7 @@ plot(varImp(stepwise.fit))
 #Tree Model while choosing complexity parameter via 10 fold CV
 #
 set.seed(1234)
-tree.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+tree.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                     data=training,
                     method="rpart",minsplit=5,
                     trControl=fitControl,
@@ -769,7 +766,7 @@ plot(varImp(tree.fit))
 #
 #Remember only continuous predictors
 set.seed(1234)
-knn.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+knn.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                 data=training,
                 method="knn",preProcess = c("center","scale"),
                 trControl=fitControl,
