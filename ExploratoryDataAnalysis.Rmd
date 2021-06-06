@@ -73,6 +73,7 @@ library(readr)
 library(arsenal)
 library(naniar)
 library(rgho)
+library(tufte)
 
 # Set current working directory as git repository local folder
 setwd(".")
