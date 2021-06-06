@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+# Function declarations
+
 # Function to investigate missing values in a column
 investigate_missing_column_values <- function(column_name) {
   missing_indices <- which(is.na(life_expectancy[,column_name]))
@@ -88,6 +90,7 @@ setwd(".")
 # Retrieve current dataset
 life_expectancy = read.csv("data/Life Expectancy Data.csv", header = TRUE, fileEncoding = "UTF-8")
 
+# Renaming columns to more consistent names
 life_expectancy <- life_expectancy %>%  rename('LifeExpectancy'='Life.expectancy',
                                                'AdultMortality'='Adult.Mortality',
                                                'InfantDeaths'='infant.deaths',
@@ -294,15 +297,14 @@ investigate_missing_column_values("Alcohol")
 
 ## percentage expenditure
 Description: Expenditure on health as a percentage of Gross Domestic Product per capita(%)
-A lot of problem in this column, for example:
+There are some data inaccuracies in this column:
 - Min.: 0.000  
 - Max.: 19479.912
 
 
 ## Hepatitis B
 Description: Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
-500 N/A (out of almost 3,000 observations)
--> We have fewer than 80% of the value so consider dropping this column
+500 N/A (out of almost 3,000 observations) in the initial data set
 
 ```{r}
 investigate_missing_column_values("HepatitisB")
@@ -327,7 +329,7 @@ miss_var_summary(life_expectancy)
 
 ## Measles
 Measles - number of reported cases per 1000 population
-A lot of problem in this column, for example:
+There are some data inaccuracies in this column:
 - Max.: 212183.0
 
 ```{r}
@@ -341,7 +343,7 @@ From WHO: It is defined as a person's weight in kilograms divided by the square 
 - a BMI greater than or equal to 30 is obesity.
 
 Missing values: very small number of missing values (34 in the whole data set)
-Data accuracy: A lot of problem in this column, for example:
+There are some data inaccuracies in this column, for example:
 - Min.: 1.00
 - Max.: 87.30
 It's not even consistent within a country, for example in China:
@@ -393,7 +395,7 @@ Description (from WHO): It's probably referring to "immunization coverage among 
 
 ## Total expenditure
 Description (from WHO): Total expenditure on health as a percentage of gross domestic product
-200 N/A (out of almost 3,000 observations)
+200 N/A (out of almost 3,000 observations) in the original dataset
 
 
 ## Diphtheria
@@ -416,7 +418,7 @@ investigate_missing_column_values("HIV_AIDS")
 
 ## GDP
 Countries' corresponding economic data was collected from United Nation website
-448 N/A (out of almost 3,000 observations)
+448 N/A (out of almost 3,000 observations) in the original dataset
 ```{r GDP Data Cleanup}
 # What rows are missing GDP?
 missing_GDP_indices <- which(is.na(life_expectancy[,'GDP']))
@@ -711,7 +713,7 @@ pairs(le_developing[,c(4,2,23,24)])
 
 # Fitting the models (re-using code from RLab4.R that was provided in unit 6)
 
-# Setting up for model creation and creating training and validation sets
+## Setting up for model creation and creating training and validation sets
 ```{r}
 # Seed will be set before data partition and each model creation so that we can run pieces of code independently and obtain predictable results
 set.seed(1234)
@@ -732,7 +734,7 @@ validate<-life_expectancy[-trainIndex,]
 ```
 
 
-# Creating GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV))
+## Creating GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV))
 Our model contains 17 predictors, which can be a fair number of predictors. We need to attempt a regulation method to reduce our potential predictors? We'll use elastic-net regression to use the least squares and combines the Lasso Regression Penalty and Ridge Regression Penalty.
 
 We'll use cross validation on various lambdas for the two penalties to determine the best values. If both penalty lambdas are reduced to 0, we should get the original least squares parameter estimates.
@@ -782,7 +784,8 @@ varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
 ```
 
-# Creating Stepwise Regression using the AIC metric and no CV
+
+## Creating Stepwise Regression using the AIC metric and no CV
 ```{r}
 set.seed(1234)
 # Using forward direction: Rsquared: 0.8084169
@@ -818,7 +821,8 @@ varImp(stepwise.fit)
 plot(varImp(stepwise.fit))
 ```
 
-# Creating Tree Model while choosing complexity parameter via 10 fold CV
+
+## Creating Tree Model while choosing complexity parameter via 10 fold CV
 ```{r}
 set.seed(1234)
 tree.fit<-train(LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
@@ -867,7 +871,8 @@ varImp(tree.fit)
 plot(varImp(tree.fit))
 ```
 
-# Creating k-nn Model (10 fold CV to choose k)
+
+## Creating k-nn Model (10 fold CV to choose k)
 ```{r}
 #Remember only continuous predictors
 set.seed(1234)
