@@ -622,19 +622,20 @@ glmnet.validate
 varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
 
+#########
 
 
-```
+
 
 
 ################################################
 #Stepwise Regression Using the AIC metric  NO CV
 set.seed(1234)
-stepwise.fit<-train(Salary~AtBat+HmRun+Runs+RBI+Walks+poly(Years,5)+CAtBat+CHits+CHmRun+CRuns+CRBI+CWalks+
-                    NewLeague+Division+PutOuts+Assists+Errors,
+stepwise.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
                   data=training,
                   method="glmStepAIC",direction="backward",trace=0,
-                  trControl=fitControl
+                  trControl=fitControl,
+                  na.action=na.exclude
 )
 
 stepwise.fit
@@ -647,10 +648,10 @@ stepwise.fit$finalModel
 stepwise.pred<-predict(stepwise.fit,validate)
 
 #Computing Errror Metrics
-stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$Salary)
+stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$LifeExpectancy)
 stepwise.validate
 
-plot(stepwise.pred,validate$Salary)
+plot(stepwise.pred,validate$LifeExpectancy)
 lines(0:2000,0:2000)
 
 #Ranking of predictors
@@ -661,12 +662,12 @@ plot(varImp(stepwise.fit))
 #Tree Model while choosing complexity parameter via 10 fold CV
 #
 set.seed(1234)
-tree.fit<-train(Salary~AtBat+HmRun+Runs+RBI+Walks+Years+CAtBat+CHits+CHmRun+CRuns+CRBI+CWalks+
-                      NewLeague+Division+PutOuts+Assists+Errors,
+tree.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
                     data=training,
                     method="rpart",minsplit=5,
                     trControl=fitControl,
-                tuneGrid=data.frame(cp=c(.005,.0008,.01,.015,.02,.025,.03,.035,.04,.05,.06,.07,.08,.09,.25,.4))
+                    tuneGrid=data.frame(cp=c(.005,.0008,.01,.015,.02,.025,.03,.035,.04,.05,.06,.07,.08,.09,.25,.4)),
+                    na.action=na.exclude
 )
 
 #Lets look at the CV result
@@ -686,10 +687,10 @@ fancyRpartPlot(tree.fit$finalModel)
 tree.pred<-predict(tree.fit,validate)
 
 #Computing Errror Metrics
-tree.validate<-postResample(pred=tree.pred,obs=validate$Salary)
+tree.validate<-postResample(pred=tree.pred,obs=validate$LifeExpectancy)
 tree.validate
 
-plot(tree.pred,validate$Salary)
+plot(tree.pred,validate$LifeExpectancy)
 lines(0:2000,0:2000)
 
 #Ranking predictors
@@ -705,11 +706,12 @@ plot(varImp(tree.fit))
 #
 #Remember only continuous predictors
 set.seed(1234)
-knn.fit<-train(Salary~AtBat+HmRun+Runs+RBI+Walks+Years+CAtBat+CHits+CHmRun+CRuns+CRBI+CWalks+PutOuts+Assists+Errors,
+knn.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
                 data=training,
                 method="knn",preProcess = c("center","scale"),
                 trControl=fitControl,
-                tuneGrid=data.frame(k=c(1:10,15,20,25,30))
+                tuneGrid=data.frame(k=c(1:10,15,20,25,30)),
+                    na.action=na.exclude
 )
 
 #Lets look at the CV result
@@ -723,10 +725,10 @@ plot(knn.fit)
 knn.pred<-predict(knn.fit,validate)
 
 #Computing Errror Metrics
-knn.validate<-postResample(pred=knn.pred,obs=validate$Salary)
+knn.validate<-postResample(pred=knn.pred,obs=validate$LifeExpectancy)
 knn.validate
 
-plot(knn.pred,validate$Salary)
+plot(knn.pred,validate$LifeExpectancy)
 lines(0:2000,0:2000)
 
 #Ranking predictors
@@ -743,3 +745,6 @@ glmnet.fit
 stepwise.fit
 tree.fit
 knn.fit
+
+
+```
