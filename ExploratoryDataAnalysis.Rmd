@@ -74,6 +74,11 @@ library(arsenal)
 library(naniar)
 library(rgho)
 library(tufte)
+library(rgl)
+library(tree)
+library(ISLR)
+library(rattle)
+
 
 # Set current working directory as git repository local folder
 setwd(".")
@@ -672,17 +677,8 @@ pairs(le_developing[,c(4,2,23,24)])
 ```
 
 
-# Trying to fit some models (re-using code from RLab4.R)
-
+# Fitting the models (re-using code from RLab4.R that was provided in unit 6)
 ```{r}
-# TODO: NEED TO MOVE SOME OF THIS AT THE TOP OF THE FILE
-library(rgl)
-library(tree)
-library(GGally)
-library(ISLR)
-library(caret)
-library(rattle)
-
 #Since some methods like LASSO have a tuning parameter, we will perform K fold CV to
 #to determine the best model.  To start off using Caret, we need to setup 
 #the details for CV.  
@@ -692,6 +688,7 @@ fitControl<-trainControl(method="repeatedcv",number=10,repeats=10) #number is th
 #As discussed in class, while we will perform feature selection via CV, it is still important
 #to have a validation set.  Caret has a nice function for data splitting.
 
+# Seed will be set before data partition and each model creation so that we can run pieces of code independently and obtain predictable results
 set.seed(1234)
 trainIndex<-createDataPartition(life_expectancy$LifeExpectancy,p=.85,list=F)  #p: proportion of data in train
 
@@ -707,10 +704,9 @@ validate<-life_expectancy[-trainIndex,]
 
 #####################################
 #GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV)
-# TODO: We already set the seed above, do we need to do it again?
 set.seed(1234)
 
-# TODO: add more candidate predictors, just a few were added to see if this works; also I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
+# TODO: I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
 
 glmnet.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                data=training,
