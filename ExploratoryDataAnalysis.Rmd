@@ -812,14 +812,3 @@ knn.fit
 
 
 ```
-
-
-#Multicollinearity testing
-```{r}
-# num_LE <- data.frame(life_expectancy[,4:22])
-# cor(num_LE) # Didn't like one of the columns, may need to be adjusted
-# round(cor(num_LE), digits = 2)
-
-ggcorr(data=life_expectancy, label = T, nbreaks=5, label_size = 3, hjust = 0.9, size = 3, layout.exp = 4) +
-  labs(title = "Multicollinearity of Variables (Pairwise / Pearson's correlation)")
-```
