@@ -684,6 +684,11 @@ pairs(le_developing[,c(4,2,23,24)])
 # Seed will be set before data partition and each model creation so that we can run pieces of code independently and obtain predictable results
 set.seed(1234)
 
+# TODO: may need to move this
+life_expectancy$log_LifeExpectancy <- life_expectancy$`log(LifeExpectancy)`
+life_expectancy$log_HIV_AIDS <- life_expectancy$`log(HIV_AIDS)`
+life_expectancy$log_GDP <- life_expectancy$`log(GDP)`
+
 #Since some methods like LASSO have a tuning parameter, we will perform K fold CV to
 #to determine the best model.  To start off using Caret, we need to setup 
 #the details for CV.  
@@ -711,7 +716,7 @@ set.seed(1234)
 
 # TODO: I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
 
-glmnet.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+glmnet.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+log_HIV_AIDS+log_GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                data=training,
                method="glmnet",
                trControl=fitControl,
@@ -747,7 +752,7 @@ plot(varImp(glmnet.fit))
 set.seed(1234)
 # Using forward direction: Rsquared: 0.8084169
 # Using backward direction: Rsquared: 0.8080292
-stepwise.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+stepwise.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+log_HIV_AIDS+log_GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                   data=training,
                   method="glmStepAIC",direction="forward",trace=0,
                   trControl=fitControl,
@@ -778,7 +783,7 @@ plot(varImp(stepwise.fit))
 # Creating Tree Model while choosing complexity parameter via 10 fold CV
 ```{r}
 set.seed(1234)
-tree.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+tree.fit<-train(LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                     data=training,
                     method="rpart",minsplit=5,
                     trControl=fitControl,
@@ -816,7 +821,7 @@ plot(varImp(tree.fit))
 ```{r}
 #Remember only continuous predictors
 set.seed(1234)
-knn.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+knn.fit<-train(LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                 data=training,
                 method="knn",preProcess = c("center","scale"),
                 trControl=fitControl,
@@ -843,6 +848,18 @@ knn.validate
 #Ranking predictors
 varImp(knn.fit)
 plot(varImp(knn.fit))
+
+# Before using log transformed variables, R-squared for:
+# glmnet: 0.8101911
+# stepwise: 0.808817
+
+# After using log transformed variables, R-squared for:
+# glmnet: 0.8280072
+# stepwise: 0.8278877
+
+# R-squared for:
+# tree: 0.9102731
+# knn: 0.8919239
 
 glmnet.validate
 stepwise.validate
