@@ -678,7 +678,12 @@ pairs(le_developing[,c(4,2,23,24)])
 
 
 # Fitting the models (re-using code from RLab4.R that was provided in unit 6)
+
+# Setting up for model creation and creating training and validation sets
 ```{r}
+# Seed will be set before data partition and each model creation so that we can run pieces of code independently and obtain predictable results
+set.seed(1234)
+
 #Since some methods like LASSO have a tuning parameter, we will perform K fold CV to
 #to determine the best model.  To start off using Caret, we need to setup 
 #the details for CV.  
@@ -688,8 +693,6 @@ fitControl<-trainControl(method="repeatedcv",number=10,repeats=10) #number is th
 #As discussed in class, while we will perform feature selection via CV, it is still important
 #to have a validation set.  Caret has a nice function for data splitting.
 
-# Seed will be set before data partition and each model creation so that we can run pieces of code independently and obtain predictable results
-set.seed(1234)
 trainIndex<-createDataPartition(life_expectancy$LifeExpectancy,p=.85,list=F)  #p: proportion of data in train
 
 training<-life_expectancy[trainIndex,]
@@ -699,11 +702,11 @@ validate<-life_expectancy[-trainIndex,]
 #Below considers all of the predictors as potential candidates.  I've inluded
 #some polynomial terms for year, since the graphs suggest that may be needed.  We'll
 #let the feature selection decide.
+```
 
 
-
-#####################################
-#GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV)
+# Creating GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV))
+```{r}
 set.seed(1234)
 
 # TODO: I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
@@ -719,7 +722,6 @@ glmnet.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol
 glmnet.fit
 #Here we can see exactly what the estimated f(x) looks like.
 coef(glmnet.fit$finalModel,glmnet.fit$finalModel$lambdaOpt)
-
 
 #Lets take a look at how well the predictions look by calculating the validation RMSE as well as simple plotting strategy.
 glmnet.pred<-predict(glmnet.fit,validate)
@@ -738,13 +740,10 @@ glmnet.validate
 #Ranking of the predictors
 varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
+```
 
-#########
-
-
-
-################################################
-#Stepwise Regression Using the AIC metric  NO CV
+# Creating Stepwise Regression using the AIC metric and no CV
+```{r}
 set.seed(1234)
 # Using forward direction: Rsquared: 0.8084169
 # Using backward direction: Rsquared: 0.8080292
@@ -756,7 +755,6 @@ stepwise.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcoh
 )
 
 stepwise.fit
-
 
 #If you want the coefficients
 stepwise.fit$finalModel
@@ -775,10 +773,10 @@ stepwise.validate
 #Ranking of predictors
 varImp(stepwise.fit)
 plot(varImp(stepwise.fit))
+```
 
-###################################################
-#Tree Model while choosing complexity parameter via 10 fold CV
-#
+# Creating Tree Model while choosing complexity parameter via 10 fold CV
+```{r}
 set.seed(1234)
 tree.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                     data=training,
@@ -798,9 +796,6 @@ text(tree.fit$finalModel)
 #prettier tree
 fancyRpartPlot(tree.fit$finalModel)
 
-
-
-
 #Making predictions on the validation set
 tree.pred<-predict(tree.fit,validate)
 
@@ -815,14 +810,10 @@ tree.validate
 #Ranking predictors
 varImp(tree.fit)
 plot(varImp(tree.fit))
+```
 
-
-
-
-
-###################################################
-# k-nn Model  10 fold CV to choose k
-#
+# Creating k-nn Model (10 fold CV to choose k)
+```{r}
 #Remember only continuous predictors
 set.seed(1234)
 knn.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
@@ -836,9 +827,7 @@ knn.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+He
 #Lets look at the CV result
 knn.fit
 
-
 plot(knn.fit)
-
 
 #Making predictions on the validation set
 knn.pred<-predict(knn.fit,validate)
@@ -854,7 +843,6 @@ knn.validate
 #Ranking predictors
 varImp(knn.fit)
 plot(varImp(knn.fit))
-
 
 glmnet.validate
 stepwise.validate
