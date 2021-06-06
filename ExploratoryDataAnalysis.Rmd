@@ -78,6 +78,8 @@ library(rgl)
 library(tree)
 library(ISLR)
 library(rattle)
+library(ggResidpanel)
+library(plotmo)
 
 
 # Set current working directory as git repository local folder
@@ -754,6 +756,10 @@ glmnet.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+
 
 #Lets look at the results of what this model has decided on
 glmnet.fit
+
+#Looking at the residuals
+plotres(glmnet.fit)
+
 #Here we can see exactly what the estimated f(x) looks like.
 coef(glmnet.fit$finalModel,glmnet.fit$finalModel$lambdaOpt)
 
@@ -789,6 +795,9 @@ stepwise.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeath
 )
 
 stepwise.fit
+
+#Looking at the residuals
+resid_panel(stepwise.fit$finalModel, plots=c("resid","qq","ls","index","cookd","lev"))
 
 #If you want the coefficients
 stepwise.fit$finalModel
