@@ -639,7 +639,34 @@ life_expectancy <- mutate(life_expectancy, log(Polio))
 pairs(life_expectancy[,c("LifeExpectancy", "Polio", "log(LifeExpectancy)","log(Polio)")])
 # Log transforming Polio does not look to be helping and is creating divergent trends, potential issue for missing data or representation from 10-35%?
 
+
 ```
+
+#Scatterplots with data separation: Developed/Developing by Status
+Checking to see how relationships differ when the data is separating countries by their status of developed or developing. 
+```{r}
+
+le_developed <- life_expectancy %>% filter(Status == "Developed")
+le_developing <- life_expectancy %>% filter(Status == "Developing")
+
+pairs(le_developed[,c(4:7)])
+pairs(le_developed[,c(4,8:10)])
+pairs(le_developed[,c(4,11:13)])
+pairs(le_developed[,c(4,14:16)])
+pairs(le_developed[,c(4,17:19)])
+pairs(le_developed[,c(4,20:22)])
+pairs(le_developed[,c(4,2,23,24)])
+
+pairs(le_developing[,c(4:7)])
+pairs(le_developing[,c(4,8:10)])
+pairs(le_developing[,c(4,11:13)])
+pairs(le_developing[,c(4,14:16)])
+pairs(le_developing[,c(4,17:19)])
+pairs(le_developing[,c(4,20:22)])
+pairs(le_developing[,c(4,2,23,24)])
+
+```
+
 
 # Trying to fit some models (re-using code from RLab4.R)
 
