@@ -720,6 +720,15 @@ validate<-life_expectancy[-trainIndex,]
 
 
 # Creating GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV))
+Our model contains 17 predictors, which can be a fair number of predictors. We need to attempt a regulation method to reduce our potential predictors? We'll use elastic-net regression to use the least squares and combines the Lasso Regression Penalty and Ridge Regression Penalty.
+
+We'll use cross validation on various lambdas for the two penalties to determine the best values. If both penalty lambdas are reduced to 0, we should get the original least squares parameter estimates.
+
+Otherwise, if the penalty lambdas are not 0, we can get the potential following:
+* lambda_1 > 0 and lambda_2 = 0 --> LASSO regression
+* lambda_1 = 0 and lambda_2 > 0 --> Ridge regression
+* lambda_1 > 0 and lambda_2 > 0 --> Hybrid of LASSO and Ridge Regression
+** Ideal for dealing w/ correlation between parameters as we should be able to group and shrink parameters that are correlated
 ```{r}
 set.seed(1234)
 
