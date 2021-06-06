@@ -748,3 +748,10 @@ knn.fit
 
 
 ```
+
+#Multicollinearity testing
+```{r}
+num_LE <- data.frame(life_expectancy[,4:22])
+cor(num_LE)
+round(cor(num_LE), digits = 2)
+```
