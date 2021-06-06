@@ -148,8 +148,12 @@ life_expectancy <- life_expectancy [((life_expectancy$Country != "Cook Islands")
                                        (life_expectancy$Country != "San Marino") &
                                        (life_expectancy$Country != "Tuvalu")),]
 
+
+# South Sudan gained independence from the Republic of the Sudan in 2011 (https://en.wikipedia.org/wiki/South_Sudan). Sudan is already in our dataset so the data about South Sudan prior to 2011 is questionable and we will remove South Sudan from the data set
+life_expectancy <- life_expectancy [(life_expectancy$Country != "South Sudan"),]
+
 nrow(life_expectancy)
-# 10 countries with only 1 year of data were removed and the data frame went from 2938 to 2928 rows
+# 10 countries with only 1 year of data were removed; 1 country was completely removed and the data frame went from 2938 to 2912 rows, so a difference of 26 rows, which makes sense: 10*1 + 16 = 26
 ```
 
 ## Year
@@ -164,14 +168,14 @@ life_expectancy <- life_expectancy [((life_expectancy$Year != 2013) &
                                        (life_expectancy$Year != 2015)),]
 
 nrow(life_expectancy)
-# 3 years were removed and with 183 countries left, the dataframe went from 2928 to 2379 rows
+# 3 years were removed and with 182 countries left, the dataframe went from 2912 to 2366 rows, so a difference of 546 rows, which makes sense: 182*3 = 546
 ```
 
 ## Status
 Some of the data in this column has been changed:
 - It's not clear what is the cutline between a Developed and a Developing country
 - In the original data, the following countries were marked as Developed: Hungary, Italy, Latvia, Lithuania, Poland, Spain, Portugal
-- Based on this and the GDP per capita (from https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.PP.CD?downloadformat=csv, using data from 2015), the Status for the following countries will be changed from Developing to Developed: Bahamas, Bahrain, Canada, Finland, France, Greece, Israel, Monaco, Qatar, Republic of Korea, San Marino, Saudi Arabia, United Arab Emirates
+- Based on this and the GDP per capita (from https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.PP.CD?downloadformat=csv, using data from 2015), the Status for the following countries will be changed from Developing to Developed: Bahamas, Bahrain, Canada, Finland, France, Greece, Israel, Monaco, Qatar, Republic of Korea, San Marino, Saudi Arabia, United Arab Emirates - note that we already removed Monaco and San Marino from the dataset based on having data for only 1 year
 
 ```{r}
 print(paste0("Before change: number of rows with Developed: ", sum(life_expectancy$Status == "Developed")))
@@ -182,7 +186,8 @@ print(paste0("After change: number of rows with Developing: ", sum(life_expectan
 
 life_expectancy[,'Status'] <- factor(life_expectancy[,'Status'])
 ```
-After the change, the number of rows with Developed increased by 690-512=178 (with a corresponding decrease for the rows with Developing), which makes sense because the Status was updated for 13 countries and we have 16 rows for most countries (for years 2000 to 2015) but we only have 1 row for Monaco and San Marino (both for year 2013): 11*16 + 2*1 = 178
+After the change, the number of rows with Developed increased by 559-416=143 (with a corresponding decrease for the rows with Developing), which makes sense because the Status was updated for 11 countries (since Monaco and San Marino are no longer part of the dataset) and we have 13 rows left for all remaining countries (for years 2000 to 2012): 11*13 = 143
+
 
 ## Life expectancy
 Description (from WHO): This seems to be "Life expectancy at birth (years)" (the other option "Life expectancy at age 60 (years)" is not consistent with the data)
@@ -224,17 +229,19 @@ investigate_over200("InfantDeaths")
 # Fill incorrect InfantDeaths data from secondary source: World Banks -- indicator code:  SP.DYN.IMRT.IN 
 wb_infant <- wb_data(indicator = "SP.DYN.IMRT.IN", country = "countries_only", start_date = 2000, end_date = 2015)
 # Grab only necessary columns and map to match dataset
+
 wb_infant <- wb_infant %>% select(date, SP.DYN.IMRT.IN , country)
 colnames(wb_infant) = c("Year", "InfantDeaths", "Country")
+
+# wb_infant <- wb_infant %>% select(date, SH.DYN.MORT , country)
+# colnames(wb_infant) = c("Year", "InfantDeaths", "Country")
 ```
 
 
 ## Alcohol
 Description: Alcohol, recorded per capita (15+) consumption (in liters of pure alcohol)
-
-Missing values: 200 N/A (out of almost 3,000 observations) - most of the missing data is from the most recent year (2015). One country, South Sudan, doesn't have any data for all the years  (it seems that alcohol was illegal during this timeframe - we could set these values to 0)
-Data accuracy: The data seems to make sense (reasonable min and max, low consumption in mainly Muslim countries, for example)
-TODO: set South Sudan to 0 and check what's left
+Missing values: only 1 value is missing for Montenegro in 2005; the value for 2004 is 0.01 and the value for 2006 is 5.38 so we will just leave the cell blank instead of trying to average the previous and following year.
+Data accuracy: The data seems to make sense for the most part (reasonable min and max, low consumption in mainly Muslim countries, for example); there are some exceptions, see for example the comment above for Montenegro
 
 ```{r}
 investigate_missing_column_values("Alcohol")
@@ -277,8 +284,7 @@ It's not even consistent within a country, for example in China:
 - in 2013: 3.9
 - In 2015: 32.9
 
-Consider dropping this one, too many inaccuracies
-
+We may need to consider dropping this column. For now, we will keep it and see if it gets selected for the model.
 
 ```{r}
 investigate_missing_column_values("BMI")
@@ -326,7 +332,7 @@ Description (from WHO): Total expenditure on health as a percentage of gross dom
 ## Diphtheria
 Description (from WHO): Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-olds (%)
 
-Missing values: very small number of missing values (19 in the whole data set)
+Missing values: very small number of missing values (8 in our reduced data)
 Data accuracy: minimum of 2 and maximum of 99, which makes sense given that it's a percentage. Most of the data seems to make sense with a few exception: for example, United Republic of Tanzania, where it varies widely from year to year between 9 and 98
 
 ```{r}
@@ -529,10 +535,10 @@ UNDP_HDI_Bulk_Dataset <- UNDP_HDI_Bulk_Dataset %>% select(-("2016":"2019") & -("
 ## Schooling
 Definition: Average number of completed years of education of a country's population aged 25 years and older, excluding years spent repeating individual grades.
 
-Missing values: 10 countries are missing all the values, we may have to fill some of them manually
+Missing values: 10 countries are missing all the values 
 Data accuracy: most of it seems accurate but there are some issues, for example Turkmenistan where is's 0 for 2000 and 2001 and 10.2 for 2002
 
-Probably drop it; missing data and covered by HDI
+This maybe redundant with Income composition of resources (HDI). 
 
 ```{r}
 investigate_missing_column_values("Schooling")
@@ -547,3 +553,193 @@ pairs(life_expectancy[,c(4,14:16)])
 pairs(life_expectancy[,c(4,17:19)])
 pairs(life_expectancy[,c(4,20:22)])
 ```
+
+# Trying to fit some models (re-using code from RLab4.R)
+
+```{r}
+# TODO: NEED TO MOVE SOME OF THIS AT THE TOP OF THE FILE
+library(rgl)
+library(tree)
+library(GGally)
+library(ISLR)
+library(caret)
+library(rattle)
+
+#Since some methods like LASSO have a tuning parameter, we will perform K fold CV to
+#to determine the best model.  To start off using Caret, we need to setup 
+#the details for CV.  
+
+fitControl<-trainControl(method="repeatedcv",number=10,repeats=10) #number is the k in k-fold
+
+#As discussed in class, while we will perform feature selection via CV, it is still important
+#to have a validation set.  Caret has a nice function for data splitting.
+
+set.seed(1234)
+trainIndex<-createDataPartition(life_expectancy$LifeExpectancy,p=.85,list=F)  #p: proportion of data in train
+
+training<-life_expectancy[trainIndex,]
+validate<-life_expectancy[-trainIndex,]
+
+#To fit models with Caret we get to work with what we know already using the y~x syntax.
+#Below considers all of the predictors as potential candidates.  I've inluded
+#some polynomial terms for year, since the graphs suggest that may be needed.  We'll
+#let the feature selection decide.
+
+
+
+#####################################
+#GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV)
+# TODO: We already set the seed above, do we need to do it again?
+set.seed(1234)
+
+# TODO: add more candidate predictors, just a few were added to see if this works; also I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
+glmnet.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
+               data=training,
+               method="glmnet",
+               trControl=fitControl,
+               na.action=na.exclude
+               )
+
+#Lets look at the results of what this model has decided on
+glmnet.fit
+#Here we can see exactly what the estimated f(x) looks like.
+coef(glmnet.fit$finalModel,glmnet.fit$finalModel$lambdaOpt)
+
+
+#Lets take a look at how well the predictions look by calculating the validation RMSE as well as simple plotting strategy.
+glmnet.pred<-predict(glmnet.fit,validate)
+
+glmnet.RMSE<-sqrt(mean((validate$LifeExpectancy-glmnet.pred)^2))
+plot(glmnet.pred,validate$LifeExpectancy,ylim=c(0,3000),xlim=c(0,3000))
+lines(0:2000,0:2000)
+glmnet.RMSE
+
+#Here is a more natural tool to compute RMSE as well as some additional metrics
+glmnet.validate<-postResample(pred = glmnet.pred, obs = validate$LifeExpectancy)                
+glmnet.validate
+
+#Ranking of the predictors
+varImp(glmnet.fit)
+plot(varImp(glmnet.fit))
+
+
+
+```
+
+
+################################################
+#Stepwise Regression Using the AIC metric  NO CV
+set.seed(1234)
+stepwise.fit<-train(Salary~AtBat+HmRun+Runs+RBI+Walks+poly(Years,5)+CAtBat+CHits+CHmRun+CRuns+CRBI+CWalks+
+                    NewLeague+Division+PutOuts+Assists+Errors,
+                  data=training,
+                  method="glmStepAIC",direction="backward",trace=0,
+                  trControl=fitControl
+)
+
+stepwise.fit
+
+
+#If you want the coefficients
+stepwise.fit$finalModel
+
+#Making predictions on the validation set
+stepwise.pred<-predict(stepwise.fit,validate)
+
+#Computing Errror Metrics
+stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$Salary)
+stepwise.validate
+
+plot(stepwise.pred,validate$Salary)
+lines(0:2000,0:2000)
+
+#Ranking of predictors
+varImp(stepwise.fit)
+plot(varImp(stepwise.fit))
+
+###################################################
+#Tree Model while choosing complexity parameter via 10 fold CV
+#
+set.seed(1234)
+tree.fit<-train(Salary~AtBat+HmRun+Runs+RBI+Walks+Years+CAtBat+CHits+CHmRun+CRuns+CRBI+CWalks+
+                      NewLeague+Division+PutOuts+Assists+Errors,
+                    data=training,
+                    method="rpart",minsplit=5,
+                    trControl=fitControl,
+                tuneGrid=data.frame(cp=c(.005,.0008,.01,.015,.02,.025,.03,.035,.04,.05,.06,.07,.08,.09,.25,.4))
+)
+
+#Lets look at the CV result
+tree.fit
+
+#If we want the final model tree
+plot(tree.fit$finalModel)
+text(tree.fit$finalModel)
+
+#prettier tree
+fancyRpartPlot(tree.fit$finalModel)
+
+
+
+
+#Making predictions on the validation set
+tree.pred<-predict(tree.fit,validate)
+
+#Computing Errror Metrics
+tree.validate<-postResample(pred=tree.pred,obs=validate$Salary)
+tree.validate
+
+plot(tree.pred,validate$Salary)
+lines(0:2000,0:2000)
+
+#Ranking predictors
+varImp(tree.fit)
+plot(varImp(tree.fit))
+
+
+
+
+
+###################################################
+# k-nn Model  10 fold CV to choose k
+#
+#Remember only continuous predictors
+set.seed(1234)
+knn.fit<-train(Salary~AtBat+HmRun+Runs+RBI+Walks+Years+CAtBat+CHits+CHmRun+CRuns+CRBI+CWalks+PutOuts+Assists+Errors,
+                data=training,
+                method="knn",preProcess = c("center","scale"),
+                trControl=fitControl,
+                tuneGrid=data.frame(k=c(1:10,15,20,25,30))
+)
+
+#Lets look at the CV result
+knn.fit
+
+
+plot(knn.fit)
+
+
+#Making predictions on the validation set
+knn.pred<-predict(knn.fit,validate)
+
+#Computing Errror Metrics
+knn.validate<-postResample(pred=knn.pred,obs=validate$Salary)
+knn.validate
+
+plot(knn.pred,validate$Salary)
+lines(0:2000,0:2000)
+
+#Ranking predictors
+varImp(knn.fit)
+plot(varImp(knn.fit))
+
+
+glmnet.validate
+stepwise.validate
+tree.validate
+knn.validate
+
+glmnet.fit
+stepwise.fit
+tree.fit
+knn.fit
