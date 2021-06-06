@@ -211,6 +211,10 @@ print(paste0("After change: number of rows with Developed: ", sum(life_expectanc
 print(paste0("After change: number of rows with Developing: ", sum(life_expectancy$Status == "Developing")))
 
 life_expectancy[,'Status'] <- factor(life_expectancy[,'Status'])
+
+# Adding a numeric column for status to use it when building regression models
+mapping <- c("Developed" = 1, "Developing" = 0)
+life_expectancy$Developed <- mapping[life_expectancy$Status]
 ```
 After the change, the number of rows with Developed increased by 559-416=143 (with a corresponding decrease for the rows with Developing), which makes sense because the Status was updated for 11 countries (since Monaco and San Marino are no longer part of the dataset) and we have 13 rows left for all remaining countries (for years 2000 to 2012): 11*13 = 143
 
@@ -865,6 +869,4 @@ glmnet.fit
 stepwise.fit
 tree.fit
 knn.fit
-
-
 ```
