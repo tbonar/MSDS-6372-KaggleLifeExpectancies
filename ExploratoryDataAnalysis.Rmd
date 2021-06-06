@@ -119,6 +119,11 @@ gg_miss_upset(life_expectancy)
 gg_miss_fct(x = life_expectancy[,c("HepatitisB","Population","GDP", "Year.factor")], fct = Year.factor)
 ```
 
+```{r, Multicolinearity, warning=F}
+ggcorr(data=life_expectancy, label = T, nbreaks=5, label_size = 3, hjust = 0.9, size = 3, layout.exp = 4) +
+  labs(title = "Multicollinearity of Variables (Pairwise / Pearson's correlation)")
+```
+
 # Comments on each column
 Description taken from one of the following:
 - https://www.kaggle.com/kumarajarshi/life-expectancy-who: Data Explorer -> Column
@@ -148,7 +153,6 @@ life_expectancy <- life_expectancy [((life_expectancy$Country != "Cook Islands")
                                        (life_expectancy$Country != "San Marino") &
                                        (life_expectancy$Country != "Tuvalu")),]
 
-
 # South Sudan gained independence from the Republic of the Sudan in 2011 (https://en.wikipedia.org/wiki/South_Sudan). Sudan is already in our dataset so the data about South Sudan prior to 2011 is questionable and we will remove South Sudan from the data set
 life_expectancy <- life_expectancy [(life_expectancy$Country != "South Sudan"),]
 
@@ -169,6 +173,26 @@ life_expectancy <- life_expectancy [((life_expectancy$Year != 2013) &
 
 nrow(life_expectancy)
 # 3 years were removed and with 182 countries left, the dataframe went from 2912 to 2366 rows, so a difference of 546 rows, which makes sense: 182*3 = 546
+```
+
+```{r}
+# Create Bird's Eyes View/Overview of Missing Data using naniar lib
+vis_miss(life_expectancy, cluster = F) + # Without aggregating observations
+  labs(title = "NAs in GHO's Life Expectancy Data from 2000-2013") +
+  theme(axis.text.x = element_text(angle=90))
+vis_miss(life_expectancy, cluster = T) + # With aggregating observations
+  labs(title = "McQuitty Method of NAs in GHO's Life Expectancy Data from 2000-2013") +
+  theme(axis.text.x = element_text(angle=90))
+# Can see that Hepatitis B, GDP, Population are about missing data in similar observations
+
+# Visualizing intersection of missing data via upset plot (watch for explanation: https://www.youtube.com/watch?v=-IfF2wGw7Qk)
+gg_miss_upset(life_expectancy)
+# Can see that there's aa\ linked economic/population problem on the second most missing data between GDP_NA and Population_NA
+# While the first column, shows that most individual sets are missing Heptatitis B information
+# However, we may want ot explore into TotalExpenditure and Alcohol
+
+# Are any of these overlapping sets or NAs for any particular Country.factor or Year.factor at play for missing data?
+gg_miss_fct(x = life_expectancy[,c("HepatitisB","Population","GDP", "Year.factor")], fct = Year.factor)
 ```
 
 ## Status
@@ -359,7 +383,7 @@ investigate_missing_column_values("GDP")
 GDP_per_capita <- wb_data(indicator = "NY.GDP.PCAP.CD", country = "countries_only", start_date = 2000, end_date = 2012)
 # Grab only necessary columns and map to match dataset
 GDP_per_capita <- GDP_per_capita %>% select(date, NY.GDP.PCAP.CD, country)
-colnames(GDP_per_capita) = c("Year", "GDP_per_capita", "Country")
+colnames(GDP_per_capita) = c("Year", "GDP", "Country")
 # Check for name discrepancies
 summary(comparedf(life_expectancy, GDP_per_capita, by = "Country", tol.vars = "Country"))
 
@@ -395,8 +419,9 @@ GDP_per_capita[,'Country'] <- sub("Yemen, Rep.", "Yemen", GDP_per_capita$Country
 summary(comparedf(life_expectancy, GDP_per_capita, by = "Country", tol.vars = "Country"))
 
 # Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
-life_expectancy_GDP <- left_join(life_expectancy, GDP_per_capita, by = c("Country","Year"))
-which(is.na(life_expectancy_GDP[,'GDP']))
+life_expectancy_GDP <- left_join(life_expectancy, GDP_per_capita, by = c("Country","Year"), copy=TRUE)
+life_expectancy_GDP <- select(life_expectancy_GDP, everything(), GDP.x = GDP.y)
+which(is.na(life_expectancy_GDP[,'GDP.x']))
 
 life_expectancy_GDP %>% ggplot(aes(x = Year, y = GDP)) + 
   geom_point(size=.75) +
@@ -470,6 +495,9 @@ wb_pop2 <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_
 # Grab only necessary columns and map to match dataset
 wb_pop2 <- wb_pop2 %>% select(date, SP.POP.TOTL , country)
 colnames(wb_pop2) = c("Year", "Population", "Country")
+
+life_expectancy_pop <- merge(life_expectancy, wb_pop2, by = c("Country","Year"))
+which(is.na(life_expectancy_pop[,'Population']))
 ```
 
 
@@ -626,8 +654,6 @@ plot(varImp(glmnet.fit))
 
 
 
-
-
 ################################################
 #Stepwise Regression Using the AIC metric  NO CV
 set.seed(1234)
@@ -749,9 +775,13 @@ knn.fit
 
 ```
 
+
 #Multicollinearity testing
 ```{r}
 num_LE <- data.frame(life_expectancy[,4:22])
 cor(num_LE)
 round(cor(num_LE), digits = 2)
+
+ggcorr(data=life_expectancy, label = T, nbreaks=5, label_size = 3, hjust = 0.9, size = 3, layout.exp = 4) +
+  labs(title = "Multicollinearity of Variables (Pairwise / Pearson's correlation)")
 ```
