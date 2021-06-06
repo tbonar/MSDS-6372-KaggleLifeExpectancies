@@ -611,6 +611,13 @@ This maybe redundant with Income composition of resources (HDI).
 ```{r}
 investigate_missing_column_values("Schooling")
 ```
+# Finalized Missing Data
+```{r}
+vis_miss(life_expectancy, cluster = T) + # With aggregating observations
+  labs(title = "Finalized NAs in GHO's Life Expectancy Data from 2000-2013") +
+  theme(axis.text.x = element_text(angle=90))
+```
+
 
 #Scatterplots before data cleaning
 ```{r}
