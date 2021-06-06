@@ -611,6 +611,34 @@ pairs(life_expectancy[,c(4,11:13)])
 pairs(life_expectancy[,c(4,14:16)])
 pairs(life_expectancy[,c(4,17:19)])
 pairs(life_expectancy[,c(4,20:22)])
+
+life_expectancy <- mutate(life_expectancy, log(GDP))
+
+# Potential spread issue
+pairs(life_expectancy[,c("LifeExpectancy","log(GDP)")])
+
+# Log transformation
+life_expectancy <- mutate(life_expectancy, log(LifeExpectancy))
+
+# Transforming life expectancy by log does not appear to help too much, will use LifeExpectancy over log(LifeExpectancy) for models
+pairs(life_expectancy[,c("LifeExpectancy", "GDP", "log(LifeExpectancy)","log(GDP)")])
+
+# HIV_AIDS
+life_expectancy <- mutate(life_expectancy, log(HIV_AIDS))
+pairs(life_expectancy[,c("LifeExpectancy", "HIV_AIDS", "log(LifeExpectancy)","log(HIV_AIDS)")])
+
+
+# Diphtheria
+life_expectancy <- mutate(life_expectancy, log(Diphtheria))
+pairs(life_expectancy[,c("LifeExpectancy", "Diphtheria", "log(LifeExpectancy)","log(Diphtheria)")])
+# Missing data creates an interesting scatterplot range/spread
+
+
+# Polio
+life_expectancy <- mutate(life_expectancy, log(Polio))
+pairs(life_expectancy[,c("LifeExpectancy", "Polio", "log(LifeExpectancy)","log(Polio)")])
+# Log transforming Polio does not look to be helping and is creating divergent trends, potential issue for missing data or representation from 10-35%?
+
 ```
 
 # Trying to fit some models (re-using code from RLab4.R)
