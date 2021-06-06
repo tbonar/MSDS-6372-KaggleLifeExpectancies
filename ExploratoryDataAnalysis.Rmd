@@ -689,9 +689,12 @@ plot(varImp(glmnet.fit))
 
 ################################################
 #Stepwise Regression Using the AIC metric  NO CV
+set.seed(1234)
+# Using forward direction: Rsquared: 0.8084169
+# Using backward direction: Rsquared: 0.8080292
 stepwise.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                   data=training,
-                  method="glmStepAIC",direction="backward",trace=0,
+                  method="glmStepAIC",direction="forward",trace=0,
                   trControl=fitControl,
                   na.action=na.exclude
 )
