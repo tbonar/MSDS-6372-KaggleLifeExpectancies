@@ -420,12 +420,12 @@ summary(comparedf(life_expectancy, GDP_per_capita, by = "Country", tol.vars = "C
 
 # Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
 life_expectancy_GDP <- left_join(life_expectancy, GDP_per_capita, by = c("Country","Year"), copy=TRUE)
-life_expectancy_GDP <- select(life_expectancy_GDP, everything(), GDP.x = GDP.y)
+# life_expectancy_GDP <- select(life_expectancy_GDP, everything(), GDP.x = GDP.y)
 which(is.na(life_expectancy_GDP[,'GDP.x']))
 
-life_expectancy_GDP %>% ggplot(aes(x = Year, y = GDP)) + 
-  geom_point(size=.75) +
-  geom_jitter()
+# life_expectancy_GDP %>% ggplot(aes(x = Year, y = GDP)) + 
+#   geom_point(size=.75) +
+#   geom_jitter()
 ```
 
 ## Population
@@ -497,7 +497,7 @@ wb_pop2 <- wb_pop2 %>% select(date, SP.POP.TOTL , country)
 colnames(wb_pop2) = c("Year", "Population", "Country")
 
 life_expectancy_pop <- merge(life_expectancy, wb_pop2, by = c("Country","Year"))
-which(is.na(life_expectancy_pop[,'Population']))
+# which(is.na(life_expectancy_pop[,'Population']))
 ```
 
 
@@ -621,7 +621,8 @@ validate<-life_expectancy[-trainIndex,]
 set.seed(1234)
 
 # TODO: add more candidate predictors, just a few were added to see if this works; also I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
-glmnet.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
+
+glmnet.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                data=training,
                method="glmnet",
                trControl=fitControl,
@@ -638,8 +639,10 @@ coef(glmnet.fit$finalModel,glmnet.fit$finalModel$lambdaOpt)
 glmnet.pred<-predict(glmnet.fit,validate)
 
 glmnet.RMSE<-sqrt(mean((validate$LifeExpectancy-glmnet.pred)^2))
-plot(glmnet.pred,validate$LifeExpectancy,ylim=c(0,3000),xlim=c(0,3000))
-lines(0:2000,0:2000)
+
+# TODO: Figure out error below:
+# plot(glmnet.pred,validate$LifeExpectancy,ylim=c(0,3000),xlim=c(0,3000))
+#lines(0:2000,0:2000)
 glmnet.RMSE
 
 #Here is a more natural tool to compute RMSE as well as some additional metrics
@@ -657,7 +660,7 @@ plot(varImp(glmnet.fit))
 ################################################
 #Stepwise Regression Using the AIC metric  NO CV
 set.seed(1234)
-stepwise.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
+stepwise.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                   data=training,
                   method="glmStepAIC",direction="backward",trace=0,
                   trControl=fitControl,
@@ -677,8 +680,9 @@ stepwise.pred<-predict(stepwise.fit,validate)
 stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$LifeExpectancy)
 stepwise.validate
 
-plot(stepwise.pred,validate$LifeExpectancy)
-lines(0:2000,0:2000)
+# TODO: Figure out error below:
+# plot(stepwise.pred,validate$LifeExpectancy)
+# lines(0:2000,0:2000)
 
 #Ranking of predictors
 varImp(stepwise.fit)
@@ -688,7 +692,7 @@ plot(varImp(stepwise.fit))
 #Tree Model while choosing complexity parameter via 10 fold CV
 #
 set.seed(1234)
-tree.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
+tree.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                     data=training,
                     method="rpart",minsplit=5,
                     trControl=fitControl,
@@ -716,8 +720,9 @@ tree.pred<-predict(tree.fit,validate)
 tree.validate<-postResample(pred=tree.pred,obs=validate$LifeExpectancy)
 tree.validate
 
-plot(tree.pred,validate$LifeExpectancy)
-lines(0:2000,0:2000)
+# TODO: Figure out error below:
+# plot(tree.pred,validate$LifeExpectancy)
+# lines(0:2000,0:2000)
 
 #Ranking predictors
 varImp(tree.fit)
@@ -732,7 +737,7 @@ plot(varImp(tree.fit))
 #
 #Remember only continuous predictors
 set.seed(1234)
-knn.fit<-train(LifeExpectancy~AdultMortality+InfantDeaths+Alcohol+Polio+Diphtheria,
+knn.fit<-train(LifeExpectancy~Status+Year+AdultMortality+InfantDeaths+Alcohol+PercentageExpenditure+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
                 data=training,
                 method="knn",preProcess = c("center","scale"),
                 trControl=fitControl,
@@ -754,8 +759,9 @@ knn.pred<-predict(knn.fit,validate)
 knn.validate<-postResample(pred=knn.pred,obs=validate$LifeExpectancy)
 knn.validate
 
-plot(knn.pred,validate$LifeExpectancy)
-lines(0:2000,0:2000)
+# TODO: Figure out error below:
+# plot(knn.pred,validate$LifeExpectancy)
+# lines(0:2000,0:2000)
 
 #Ranking predictors
 varImp(knn.fit)
