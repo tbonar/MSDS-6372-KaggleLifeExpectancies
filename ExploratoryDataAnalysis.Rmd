@@ -72,6 +72,7 @@ library(caret)
 library(readr)
 library(arsenal)
 library(naniar)
+library(rgho)
 
 # Set current working directory as git repository local folder
 setwd(".")
@@ -286,6 +287,22 @@ Description: Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
 
 ```{r}
 investigate_missing_column_values("HepatitisB")
+
+miss_var_summary(life_expectancy)
+
+# https://www.who.int/data/gho/data/indicators/indicator-details/GHO/hepatitis-b-(hepb3)-immunization-coverage-among-1-year-olds-(-)
+
+hepB <- read.csv("./data/WSH4_117.csv", header = T, skip=1)
+colnames(hepB) <- sub("X", "", colnames(hepB))
+hepB <- hepB %>% select(-("2013":"2019") & -("1989":"1999"))
+
+# Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
+# life_expectancy <- left_join(life_expectancy, hepB, by = c("Country", "Year")) %>% 
+#     mutate(GDP = coalesce(GDP.x, GDP.y)) %>% 
+#     select(-GDP.x,-GDP.y)
+
+miss_var_summary(life_expectancy)
+
 ```
 
 ## Measles
@@ -420,14 +437,14 @@ GDP_per_capita[,'Country'] <- sub("Yemen, Rep.", "Yemen", GDP_per_capita$Country
 
 summary(comparedf(life_expectancy, GDP_per_capita, by = "Country", tol.vars = "Country"))
 
-# Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
-life_expectancy_GDP <- left_join(life_expectancy, GDP_per_capita, by = c("Country","Year"), copy=TRUE)
-# life_expectancy_GDP <- select(life_expectancy_GDP, everything(), GDP.x = GDP.y)
-which(is.na(life_expectancy_GDP[,'GDP.x']))
+miss_var_summary(life_expectancy)
 
-# life_expectancy_GDP %>% ggplot(aes(x = Year, y = GDP)) + 
-#   geom_point(size=.75) +
-#   geom_jitter()
+# Merge life_expectancy and GDP_per_capita on Year and Country to fill in GDP
+life_expectancy <- left_join(life_expectancy, GDP_per_capita, by = c("Country", "Year")) %>% 
+    mutate(GDP = coalesce(GDP.x, GDP.y)) %>% 
+    select(-GDP.x,-GDP.y)
+
+miss_var_summary(life_expectancy)
 ```
 
 ## Population
@@ -454,21 +471,10 @@ miss_pop$Country <- as.factor(miss_pop$Country)
 levels(miss_pop$Country)
 
 #Import World Bank Population Data: https://data.worldbank.org/indicator/SP.POP.TOTL
-# wb_population = read.csv("data/API_SP.POP.TOTL_DS2_en_csv_v2_2445260.csv", header = FALSE)
-
-#Tidy Data
-# wb_pop <- wb_population[4:267,]
-# colnames(wb_pop)<- wb_population[3,]
-# wb_pop <- wb_pop[c(1,45:60)]
-# wb_pop <- gather(wb_pop, Year, Population, '2000':'2012' , factor_key=TRUE)
-# wb_pop <- wb_pop %>% rename('Country' = 'Country Name')
-# wb_pop$Year <- as.numeric(wb_pop$Year)
-
-# Fill missing GDP data from secondary source: World Banks -- indicator code:  SP.POP.TOTL
-wb_population <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_date = 2000, end_date = 2012)
+wb_pop <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_date = 2000, end_date = 2012)
 # Grab only necessary columns and map to match dataset
-wb_population <- wb_population %>% select(date, SP.POP.TOTL, country)
-colnames(wb_population) = c("Year", "Population", "Country")
+wb_pop <- wb_pop %>% select(date, SP.POP.TOTL, country)
+colnames(wb_pop) = c("Year", "Population", "Country")
 
 #Columns that need to be renamed in order to merge (WB data is missing Cook Islands and Niue)
 wb_pop[,'Country'] <- sub("Bahamas, The", "Bahamas", wb_pop$Country) 
@@ -508,23 +514,13 @@ wb_pop[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_pop$Country)
 
 # life_expectancy_pop <- merge(life_expectancy, wb_pop2, by = c("Country","Year"))
 # # which(is.na(life_expectancy_pop[,'Population']))
+miss_var_summary(life_expectancy)
 
-cleandata <- function(wb_dataset, column_name) {
-  wb_column <<- paste(column_name, "y", sep=".")
-  orig_column <<- paste(column_name, "x", sep=".")
-  
-  #merging datasets: Life Expectancy and World Bank
-  joined <<- left_join(life_expectancy, wb_dataset, by = c("Country","Year")) 
-  #Loop through joined dataset
-  for (i in 1:length(joined)){
-    if ((!is.na(joined[i,wb_column])) & ((joined[i,orig_column] != joined[i,wb_column]) | (is.na(joined[i,orig_column])))){
-      life_expectancy[i,column_name] <<- joined[i,wb_column]
-    }
-  }
-}
+life_expectancy <- left_join(life_expectancy, wb_pop, by = c("Country", "Year")) %>% 
+    mutate(Population = coalesce(Population.x, Population.y)) %>% 
+    select(-Population.x,-Population.y)
 
-cleandata(wb_pop,"Population")
-investigate_missing_column_values("Population")
+
 miss_var_summary(life_expectancy)
 ```
 
@@ -783,7 +779,7 @@ plot(knn.fit)
 #Making predictions on the validation set
 knn.pred<-predict(knn.fit,validate)
 
-#Computing Errror Metrics
+#Computing Error Metrics
 knn.validate<-postResample(pred=knn.pred,obs=validate$LifeExpectancy)
 knn.validate
 
@@ -812,9 +808,9 @@ knn.fit
 
 #Multicollinearity testing
 ```{r}
-num_LE <- data.frame(life_expectancy[,4:22])
-cor(num_LE)
-round(cor(num_LE), digits = 2)
+# num_LE <- data.frame(life_expectancy[,4:22])
+# cor(num_LE) # Didn't like one of the columns, may need to be adjusted
+# round(cor(num_LE), digits = 2)
 
 ggcorr(data=life_expectancy, label = T, nbreaks=5, label_size = 3, hjust = 0.9, size = 3, layout.exp = 4) +
   labs(title = "Multicollinearity of Variables (Pairwise / Pearson's correlation)")
