@@ -432,6 +432,7 @@ which(is.na(life_expectancy_GDP[,'GDP.x']))
 700 N/A (out of almost 3,000 observations)
 Min is probably wrong (population of 34?) -- Maldives 2003
 ```{r}
+miss_var_summary(life_expectancy)
 #Looking at missing values
 investigate_missing_column_values("Population")
 summary(life_expectancy$Population)
@@ -454,11 +455,12 @@ levels(miss_pop$Country)
 wb_population = read.csv("data/API_SP.POP.TOTL_DS2_en_csv_v2_2445260.csv", header = FALSE)
 
 #Tidy Data
-wb_pop <- wb_population[4:66,]
+wb_pop <- wb_population[4:267,]
 colnames(wb_pop)<- wb_population[3,]
 wb_pop <- wb_pop[c(1,45:60)]
 wb_pop <- gather(wb_pop, Year, Population, '2000':'2015' , factor_key=TRUE)
 wb_pop <- wb_pop %>% rename('Country' = 'Country Name')
+wb_pop$Year <- as.numeric(wb_pop$Year)
 
 #Columns that need to be renamed in order to merge (WB data is missing Cook Islands and Niue)
 wb_pop[,'Country'] <- sub("Bahamas, The", "Bahamas", wb_pop$Country) 
@@ -489,15 +491,30 @@ wb_pop[,'Country'] <- sub("Vietnam", "Viet nam", wb_pop$Country)
 wb_pop[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_pop$Country) 
 
 
-###DATA PREP: Merge Function for missing/incorrect data
-# Fill mising Population data from secondary source: World Banks -- indicator code:  SP.POP.TOTL
-wb_pop2 <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_date = 2000, end_date = 2015)
-# Grab only necessary columns and map to match dataset
-wb_pop2 <- wb_pop2 %>% select(date, SP.POP.TOTL , country)
-colnames(wb_pop2) = c("Year", "Population", "Country")
+# ###DATA PREP: Merge Function for missing/incorrect data
+# # Fill mising Population data from secondary source: World Banks -- indicator code:  SP.POP.TOTL
+# wb_pop2 <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_date = 2000, end_date = 2015)
+# # Grab only necessary columns and map to match dataset
+# wb_pop2 <- wb_pop2 %>% select(date, SP.POP.TOTL , country)
+# colnames(wb_pop2) = c("Year", "Population", "Country")
 
-life_expectancy_pop <- merge(life_expectancy, wb_pop2, by = c("Country","Year"))
-# which(is.na(life_expectancy_pop[,'Population']))
+# life_expectancy_pop <- merge(life_expectancy, wb_pop2, by = c("Country","Year"))
+# # which(is.na(life_expectancy_pop[,'Population']))
+
+cleandata <- function(wb_dataset, column_name) {
+  #merging datasets: Life Expectancy and World Bank
+  joined <<- left_join(life_expectancy, wb_dataset, by = c("Country","Year")) 
+  #Loop through joined dataset
+  for (i in 1:length(joined)){
+    if ((!is.na(joined[i,25])) & ((joined[i,18] != joined[i,25]) | (is.na(joined[i,18])))){
+      life_expectancy[i,grep(column_name, colnames(life_expectancy))] <<- joined[i,25]
+    }
+  }
+}
+
+cleandata(wb_pop,"Population")
+investigate_missing_column_values("Population")
+miss_var_summary(life_expectancy)
 ```
 
 
