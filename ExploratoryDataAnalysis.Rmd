@@ -445,6 +445,7 @@ life_expectancy <- left_join(life_expectancy, GDP_per_capita, by = c("Country", 
     select(-GDP.x,-GDP.y)
 
 miss_var_summary(life_expectancy)
+
 ```
 
 ## Population
@@ -501,7 +502,7 @@ wb_pop[,'Country'] <- sub("United Kingdom", "United Kingdom of Great Britain and
 wb_pop[,'Country'] <- sub("United States", "United States of America", wb_pop$Country) 
 wb_pop[,'Country'] <- sub("Tanzania", "United Republic of Tanzania", wb_pop$Country) 
 wb_pop[,'Country'] <- sub("Venezuela, RB", "Venezuela (Bolivarian Republic of)", wb_pop$Country) 
-wb_pop[,'Country'] <- sub("Vietnam", "Viet nam", wb_pop$Country) 
+wb_pop[,'Country'] <- sub("Vietnam", "Viet Nam", wb_pop$Country) 
 wb_pop[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_pop$Country) 
 
 
@@ -522,6 +523,13 @@ life_expectancy <- left_join(life_expectancy, wb_pop, by = c("Country", "Year"))
 
 
 miss_var_summary(life_expectancy)
+life_expectancy %>% ggplot(aes(x=life_expectancy$Population))+geom_boxplot()
+summary(life_expectancy$Population)
+
+le_ordered <- life_expectancy[order(life_expectancy$Population),]
+tail(le_ordered,20)
+head(le_ordered,50)
+
 ```
 
 
