@@ -771,14 +771,14 @@ set.seed(1234)
 #                          family="gaussian",# telling glmnet we're doing linear regression, use binomial for Logistic Regression
 #                          na.action=na.exlude) # Exclude NAs b/c GLMNET doesn't handle missing data well
 
-glmnet.fit<-train(LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor - Country,
+glmnet.fit<-train(LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor - Country - log_Diphtheria - log_Polio - HIV_AIDS - GDP,
                data=training,
                method="glmnet",
                trControl=fitControl,
                na.action=na.exclude
                )
 
-glmnet.country.fit<-train(LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor,
+glmnet.country.fit<-train(LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor - log_Diphtheria - log_Polio - HIV_AIDS - GDP,
                data=training,
                method="glmnet",
                trControl=fitControl,
