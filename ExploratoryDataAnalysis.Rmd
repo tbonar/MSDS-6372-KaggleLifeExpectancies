@@ -734,14 +734,6 @@ stepwise.fit$finalModel
 #Making predictions on the validation set
 stepwise.pred<-predict(stepwise.fit,validate)
 
-#Computing Errror Metrics
-stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$LifeExpectancy)
-stepwise.validate
-
-# TODO: Figure out error below:
-# plot(stepwise.pred,validate$LifeExpectancy)
-# lines(0:2000,0:2000)
-
 #Ranking of predictors
 varImp(stepwise.fit)
 plot(varImp(stepwise.fit))
