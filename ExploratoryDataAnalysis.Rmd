@@ -695,7 +695,8 @@ pairs(le_developing[,c(4,2,23,24)])
 ```
 
 
-# Fitting the models (re-using code from RLab4.R that was provided in unit 6)
+# Fitting the models (adapting code from RLab4.R that was provided in unit 6)
+
 
 ## Setting up for model creation and creating training and validation sets
 ```{r}
@@ -703,11 +704,6 @@ pairs(le_developing[,c(4,2,23,24)])
 set.seed(1234)
 
 # Setup of CV details
-
-#Since some methods like LASSO have a tuning parameter, we will perform K fold CV to
-#to determine the best model.  To start off using Caret, we need to setup 
-#the details for CV.  
-
 fitControl<-trainControl(method="repeatedcv",number=10,repeats=10) #number is the k in k-fold
 
 # Creating training and validation set
@@ -717,7 +713,8 @@ training<-life_expectancy[trainIndex,]
 validate<-life_expectancy[-trainIndex,]
 ```
 
-# Creating Stepwise Regression using the AIC metric and no CV
+
+## Creating Stepwise Regression using the AIC metric and no CV
 ```{r}
 set.seed(1234)
 # Using forward direction: Rsquared: 0.8084169
@@ -749,6 +746,7 @@ stepwise.validate
 varImp(stepwise.fit)
 plot(varImp(stepwise.fit))
 ```
+
 
 ## Creating GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV))
 Our model contains 17 predictors, which can be a fair number of predictors. We need to attempt a regulation method to reduce our potential predictors? We'll use elastic-net regression to use the least squares and combines the Lasso Regression Penalty and Ridge Regression Penalty.
@@ -812,6 +810,8 @@ glmnet.validate
 varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
 ```
+
+
 ## Creating Tree Model while choosing complexity parameter via 10 fold CV Regression)
 ```{r}
 set.seed(1234)
@@ -860,6 +860,7 @@ tree.validate
 varImp(tree.fit)
 plot(varImp(tree.fit))
 ```
+
 
 ## Creating k-nn Model (10 fold CV to choose k)
 ```{r}
