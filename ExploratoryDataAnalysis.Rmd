@@ -910,11 +910,13 @@ plot(varImp(knn.fit))
 # knn: 0.8919239
 
 glmnet.validate
+glmnet.country.validate
 stepwise.validate
 tree.validate
 knn.validate
 
 glmnet.fit
+glmnet.country.fit
 stepwise.fit
 tree.fit
 knn.fit
