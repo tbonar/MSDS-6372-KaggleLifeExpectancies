@@ -776,7 +776,14 @@ set.seed(1234)
 #                          family="gaussian",# telling glmnet we're doing linear regression, use binomial for Logistic Regression
 #                          na.action=na.exlude) # Exclude NAs b/c GLMNET doesn't handle missing data well
 
-glmnet.fit<-train(log_LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor,
+glmnet.fit<-train(log_LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor - Country,
+               data=training,
+               method="glmnet",
+               trControl=fitControl,
+               na.action=na.exclude
+               )
+
+glmnet.country.fit<-train(log_LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor,
                data=training,
                method="glmnet",
                trControl=fitControl,
@@ -785,30 +792,42 @@ glmnet.fit<-train(log_LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy -
 
 #Lets look at the results of what this model has decided on
 glmnet.fit
+glmnet.country.fit
 
 #Looking at the residuals
 plotres(glmnet.fit)
+plotres(glmnet.country.fit)
 
 #Here we can see exactly what the estimated f(x) looks like.
 coef(glmnet.fit$finalModel,glmnet.fit$finalModel$lambdaOpt)
+coef(glmnet.country.fit$finalModel,glmnet.country.fit$finalModel$lambdaOpt)
 
 #Lets take a look at how well the predictions look by calculating the validation RMSE as well as simple plotting strategy.
 glmnet.pred<-predict(glmnet.fit,validate)
+glmnet.country.pred<-predict(glmnet.country.fit,validate)
 
 glmnet.RMSE<-sqrt(mean((validate$LifeExpectancy-glmnet.pred)^2))
+glmnet.country.RMSE<-sqrt(mean((validate$LifeExpectancy-glmnet.country.pred)^2))
 
 # TODO: Figure out error below:
 # plot(glmnet.pred,validate$LifeExpectancy,ylim=c(0,3000),xlim=c(0,3000))
 #lines(0:2000,0:2000)
 glmnet.RMSE
+glmnet.country.RMSE
 
 #Here is a more natural tool to compute RMSE as well as some additional metrics
-glmnet.validate<-postResample(pred = glmnet.pred, obs = validate$LifeExpectancy)                
+glmnet.validate<-postResample(pred = glmnet.pred, obs = validate$LifeExpectancy)    
+glmnet.country.validate<-postResample(pred = glmnet.country.pred, obs = validate$LifeExpectancy)  
+
 glmnet.validate
+glmnet.country.validate
 
 #Ranking of the predictors
 varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
+
+varImp(glmnet.country.fit)
+plot(varImp(glmnet.country.fit))
 ```
 
 
