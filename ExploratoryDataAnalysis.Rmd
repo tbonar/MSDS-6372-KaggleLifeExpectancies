@@ -812,43 +812,6 @@ glmnet.validate
 varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
 ```
-
-## Creating Stepwise Regression using the AIC metric and no CV
-```{r}
-set.seed(1234)
-# Using forward direction: Rsquared: 0.8084169
-# Using backward direction: Rsquared: 0.8080292
-stepwise.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+log_HIV_AIDS+log_GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
-                  data=training,
-                  method="glmStepAIC",direction="forward",trace=0,
-                  trControl=fitControl,
-                  na.action=na.exclude
-)
-
-stepwise.fit
-
-#Looking at the residuals
-resid_panel(stepwise.fit$finalModel, plots=c("resid","qq","ls","index","cookd","lev"))
-
-#If you want the coefficients
-stepwise.fit$finalModel
-
-#Making predictions on the validation set
-stepwise.pred<-predict(stepwise.fit,validate)
-
-#Computing Errror Metrics
-stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$LifeExpectancy)
-stepwise.validate
-
-# TODO: Figure out error below:
-# plot(stepwise.pred,validate$LifeExpectancy)
-# lines(0:2000,0:2000)
-
-#Ranking of predictors
-varImp(stepwise.fit)
-plot(varImp(stepwise.fit))
-```
-
 ## Creating Tree Model while choosing complexity parameter via 10 fold CV Regression)
 ```{r}
 set.seed(1234)
