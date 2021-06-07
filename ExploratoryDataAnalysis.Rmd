@@ -537,13 +537,6 @@ wb_pop[,'Country'] <- sub("Yemen, Rep.", "Yemen", wb_pop$Country)
 
 # ###DATA PREP: Merge Function for missing/incorrect data
 # # Fill mising Population data from secondary source: World Banks -- indicator code:  SP.POP.TOTL
-# wb_pop2 <- wb_data(indicator = "SP.POP.TOTL", country = "countries_only", start_date = 2000, end_date = 2015)
-# # Grab only necessary columns and map to match dataset
-# wb_pop2 <- wb_pop2 %>% select(date, SP.POP.TOTL , country)
-# colnames(wb_pop2) = c("Year", "Population", "Country")
-
-# life_expectancy_pop <- merge(life_expectancy, wb_pop2, by = c("Country","Year"))
-# # which(is.na(life_expectancy_pop[,'Population']))
 miss_var_summary(life_expectancy)
 
 life_expectancy <- left_join(life_expectancy, wb_pop, by = c("Country", "Year")) %>% 
@@ -610,15 +603,6 @@ UNDP_HDI_Bulk_Dataset <- read.csv("data/Modified_UNDP_HDI.csv",
 colnames(UNDP_HDI_Bulk_Dataset) <- sub("X", "", colnames(UNDP_HDI_Bulk_Dataset))
 UNDP_HDI_Bulk_Dataset <- UNDP_HDI_Bulk_Dataset %>% select(-("2016":"2019") & -("1990":"1999"))
 
-# Commenting the following for block because it's causing an error:
-# Error: unexpected '}' in:
-# "  life_expectancy[missing_HDI_indices[i]] <- 
-# }"
-
-# for(i in 1:length(missing_HDI_indices)) {
-#   life_expectancy[missing_HDI_indices[i]] <- 
-#}
-
 ```
 
 
@@ -652,31 +636,31 @@ pairs(life_expectancy[,c(4,14:16)])
 pairs(life_expectancy[,c(4,17:19)])
 pairs(life_expectancy[,c(4,20:22)])
 
-life_expectancy <- mutate(life_expectancy, log(GDP))
+life_expectancy<-life_expectancy %>% mutate(log_GDP = log(GDP))
 
 # Potential spread issue
-pairs(life_expectancy[,c("LifeExpectancy","log(GDP)")])
+pairs(life_expectancy[,c("LifeExpectancy","log_GDP")])
 
 # Log transformation
-life_expectancy <- mutate(life_expectancy, log(LifeExpectancy))
+life_expectancy<-life_expectancy %>% mutate(log_LifeExpectancy = log(LifeExpectancy))
 
 # Transforming life expectancy by log does not appear to help too much, will use LifeExpectancy over log(LifeExpectancy) for models
-pairs(life_expectancy[,c("LifeExpectancy", "GDP", "log(LifeExpectancy)","log(GDP)")])
+pairs(life_expectancy[,c("LifeExpectancy", "GDP", "log_LifeExpectancy","log_GDP")])
 
 # HIV_AIDS
-life_expectancy <- mutate(life_expectancy, log(HIV_AIDS))
-pairs(life_expectancy[,c("LifeExpectancy", "HIV_AIDS", "log(LifeExpectancy)","log(HIV_AIDS)")])
+life_expectancy<-life_expectancy %>% mutate(log_HIV_AIDS = log(HIV_AIDS))
+pairs(life_expectancy[,c("LifeExpectancy", "HIV_AIDS", "log_LifeExpectancy","log_HIV_AIDS")])
 
 
 # Diphtheria
-life_expectancy <- mutate(life_expectancy, log(Diphtheria))
-pairs(life_expectancy[,c("LifeExpectancy", "Diphtheria", "log(LifeExpectancy)","log(Diphtheria)")])
+life_expectancy<-life_expectancy %>% mutate(log_Diphtheria = log(Diphtheria))
+pairs(life_expectancy[,c("LifeExpectancy", "Diphtheria", "log_LifeExpectancy","log_Diphtheria")])
 # Missing data creates an interesting scatterplot range/spread
 
 
 # Polio
-life_expectancy <- mutate(life_expectancy, log(Polio))
-pairs(life_expectancy[,c("LifeExpectancy", "Polio", "log(LifeExpectancy)","log(Polio)")])
+life_expectancy<-life_expectancy %>% mutate(log_Polio = log(Polio))
+pairs(life_expectancy[,c("LifeExpectancy", "Polio", "log_LifeExpectancy","log_Polio")])
 # Log transforming Polio does not look to be helping and is creating divergent trends, potential issue for missing data or representation from 10-35%?
 
 pairs(life_expectancy[,c("LifeExpectancy", "Year")])
@@ -718,12 +702,12 @@ pairs(le_developing[,c(4,2,23,24)])
 # Seed will be set before data partition and each model creation so that we can run pieces of code independently and obtain predictable results
 set.seed(1234)
 
-# These columns names will be used for parametric models
-life_expectancy$log_LifeExpectancy <- life_expectancy$`log(LifeExpectancy)`
-life_expectancy$log_HIV_AIDS <- life_expectancy$`log(HIV_AIDS)`
-life_expectancy$log_GDP <- life_expectancy$`log(GDP)`
-
 # Setup of CV details
+
+#Since some methods like LASSO have a tuning parameter, we will perform K fold CV to
+#to determine the best model.  To start off using Caret, we need to setup 
+#the details for CV.  
+
 fitControl<-trainControl(method="repeatedcv",number=10,repeats=10) #number is the k in k-fold
 
 # Creating training and validation set
@@ -733,6 +717,38 @@ training<-life_expectancy[trainIndex,]
 validate<-life_expectancy[-trainIndex,]
 ```
 
+# Creating Stepwise Regression using the AIC metric and no CV
+```{r}
+set.seed(1234)
+# Using forward direction: Rsquared: 0.8084169
+# Using backward direction: Rsquared: 0.8080292
+stepwise.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+log_HIV_AIDS+log_GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+                  data=training,
+                  method="glmStepAIC",direction="forward",trace=0,
+                  trControl=fitControl,
+                  na.action=na.exclude
+)
+
+stepwise.fit
+
+#If you want the coefficients
+stepwise.fit$finalModel
+
+#Making predictions on the validation set
+stepwise.pred<-predict(stepwise.fit,validate)
+
+#Computing Errror Metrics
+stepwise.validate<-postResample(pred=stepwise.pred,obs=validate$LifeExpectancy)
+stepwise.validate
+
+# TODO: Figure out error below:
+# plot(stepwise.pred,validate$LifeExpectancy)
+# lines(0:2000,0:2000)
+
+#Ranking of predictors
+varImp(stepwise.fit)
+plot(varImp(stepwise.fit))
+```
 
 ## Creating GLM Net Model (selecting tuning parameters alpha and lambda via 10 FOLD CV))
 Our model contains 17 predictors, which can be a fair number of predictors. We need to attempt a regulation method to reduce our potential predictors? We'll use elastic-net regression to use the least squares and combines the Lasso Regression Penalty and Ridge Regression Penalty.
@@ -744,12 +760,25 @@ Otherwise, if the penalty lambdas are not 0, we can get the potential following:
 * lambda_1 = 0 and lambda_2 > 0 --> Ridge regression
 * lambda_1 > 0 and lambda_2 > 0 --> Hybrid of LASSO and Ridge Regression
 ** Ideal for dealing w/ correlation between parameters as we should be able to group and shrink parameters that are correlated
+
+Furthermore, GLMNET reduces the number of lambdas by introducing an alpha. This should allow us to benefit from Elastic-Net regression or if our lambda = 0, we will be doing standard least squares regression, otherwise if lambda > 0, we introduce LASSO or Ridge penalties as described above. 
 ```{r}
+library(glmnet)
+
 set.seed(1234)
 
 # TODO: I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
 
-glmnet.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+log_HIV_AIDS+log_GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
+# Create linear regression with potential penalties (of LASSO or RIDGE) using 10-fold cross validation method for finding optimal lambda
+# Couldn't get this to work
+# glmnet.fit2 <- cv.glmnet(x=data.matrix(select(training, -"LifeExpectancy", -"Country",-"Status", -"Year.factor", -"Country.factor",-"log_LifeExpectancy")), # explanatory variables are all other than Life Expectancy
+#                          y=training$log_LifeExpectancy, # response is Life Expectancy
+#                          type.measure="mse", # Use MSE as cross validation metric
+#                          nfold=10, # use 10 folds for cross validation
+#                          family="gaussian",# telling glmnet we're doing linear regression, use binomial for Logistic Regression
+#                          na.action=na.exlude) # Exclude NAs b/c GLMNET doesn't handle missing data well
+
+glmnet.fit<-train(log_LifeExpectancy ~ . - LifeExpectancy - log_LifeExpectancy - Country.factor - Year.factor,
                data=training,
                method="glmnet",
                trControl=fitControl,
@@ -783,7 +812,6 @@ glmnet.validate
 varImp(glmnet.fit)
 plot(varImp(glmnet.fit))
 ```
-
 
 ## Creating Stepwise Regression using the AIC metric and no CV
 ```{r}
@@ -821,8 +849,7 @@ varImp(stepwise.fit)
 plot(varImp(stepwise.fit))
 ```
 
-
-## Creating Tree Model while choosing complexity parameter via 10 fold CV
+## Creating Tree Model while choosing complexity parameter via 10 fold CV Regression)
 ```{r}
 set.seed(1234)
 tree.fit<-train(LifeExpectancy~Developed+Year+AdultMortality+InfantDeaths+Alcohol+HepatitisB+Measles+BMI+Polio+TotalExpenditure+Diphtheria+HIV_AIDS+GDP+Population+Thinness_1_19_years+IncCompOfResources+Schooling,
@@ -870,7 +897,6 @@ tree.validate
 varImp(tree.fit)
 plot(varImp(tree.fit))
 ```
-
 
 ## Creating k-nn Model (10 fold CV to choose k)
 ```{r}
