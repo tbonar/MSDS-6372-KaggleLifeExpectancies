@@ -765,8 +765,6 @@ library(glmnet)
 
 set.seed(1234)
 
-# TODO: I added "na.action=na.exclude" but not sure if we should keep it (need to figure out what is excluded exactly)
-
 # Create linear regression with potential penalties (of LASSO or RIDGE) using 10-fold cross validation method for finding optimal lambda
 # Couldn't get this to work
 # glmnet.fit2 <- cv.glmnet(x=data.matrix(select(training, -"LifeExpectancy", -"Country",-"Status", -"Year.factor", -"Country.factor",-"log_LifeExpectancy")), # explanatory variables are all other than Life Expectancy
