@@ -728,6 +728,9 @@ stepwise.fit<-train(log_LifeExpectancy~Developed+Year+AdultMortality+InfantDeath
 
 stepwise.fit
 
+#Looking at the residual plots
+resid_panel(stepwise.fit$finalModel, plots=c("resid","qq","ls","index","cookd","lev"))
+
 #If you want the coefficients
 stepwise.fit$finalModel
 
